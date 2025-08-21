@@ -1,37 +1,50 @@
 import { resolve } from 'path'
-import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, writeFileSync } from 'fs'
 
 import { configTemplate } from './templates/config'
 import { ArtieConfig, MetricConfig } from './types/config.interface'
+import { calculateCBO, calculateRFC, printMetric, readFileContent } from './utils'
 
 export function readConfig(): ArtieConfig {
   const filePath = resolve(process.cwd(), '.artierc.json')
-  const config = readFileSync(filePath, 'utf-8')
+  const config = readFileContent(filePath)
 
   return JSON.parse(config)
+}
+
+export function getEnableMetrics(config: ArtieConfig): string[] {
+  const enabled = []
+
+  for (const metric of Object.keys(config.options.metrics)) {
+    const currentMetric = config.options.metrics[metric]
+    if (currentMetric.enabled) {
+      enabled.push(metric)
+    }
+  }
+
+  return enabled
 }
 
 export function initConfig(): void {
   const filePath = resolve(process.cwd(), '.artierc.json')
   if (existsSync(filePath)) {
-    return console.log("⚠️  O arquivo .artierc.json já existe no diretório atual.")
+    return console.log("⚠️  The file .artierc.json already exists on the current directory.")
   }
 
   const configContent = JSON.stringify(configTemplate, null, 2)
   writeFileSync(filePath, configContent)
 
-  console.log('✅ Arquivo .artierc.json criado com sucesso!')
+  console.log('✅ File .artierc.json created!')
 }
 
-export async function getMetricConfig(metricName: string): Promise<MetricConfig> {
-  const config = await readConfig()
-  console.dir({ config }, { depth: null })
+export function getMetricConfig(metricName: string): MetricConfig {
+  const config = readConfig()
 
   const defaults = config.options.defaultThresholds
   const metric = config.options.metrics[metricName.toLowerCase()]
 
   if (!metric) {
-    throw new Error(`Métrica ${metricName} não encontrada.`)
+    throw new Error(`Metric ${metricName} not found.`)
   }
 
   if (!metric.enabled) {
@@ -45,12 +58,23 @@ export async function getMetricConfig(metricName: string): Promise<MetricConfig>
   }
 }
 
-export async function runLens(): Promise<void> {
-  const metrics = ['wmc', 'lcom', 'cbo', 'rfc']
+export async function runLens(directory = process.cwd()): Promise<void> {
+  const config = readConfig()
+  const metrics = getEnableMetrics(config)
 
-  const config = {} as any
+  const properties = {
+    'cbo': calculateCBO,
+    'rfc': calculateRFC,
+  }
+
   for (const metric of metrics) {
-    config[metric] = await getMetricConfig(metric)
+    const thresholds = getMetricConfig(metric)
+    const result = await properties[metric](directory, thresholds, config.include, config.exclude)
+    console.log(`${metric} - Total: ${result.length}`)
+
+    for (const item of result) {
+      printMetric(`[${item.label}] ${item.file}: ${item.total}`, item.label)
+    }
   }
 }
 
@@ -62,11 +86,12 @@ const main = async (args: string[]): Promise<void> => {
 
   const argument = args.slice(2)
   const parameter = argument[0]
+  const directory = argument[1]
 
   if (parameter && parameter in commands) {
-    await commands[parameter as keyof typeof commands]()
+    await commands[parameter as keyof typeof commands](directory)
   } else {
-    console.log('⚠️ Comando inválido')
+    console.log('⚠️ Invalid command')
   }
 }
 main(process.argv)

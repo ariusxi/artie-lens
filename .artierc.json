@@ -6,12 +6,12 @@
     },
     "metrics": {
       "lcom": {
-        "enabled": true,
+        "enabled": false,
         "warning": 5,
         "critical": 10
       },
       "wmc": {
-        "enabled": true,
+        "enabled": false,
         "warning": 10,
         "critical": 25
       },
@@ -21,13 +21,13 @@
         "critical": 30
       },
       "cbo": {
-        "enabled": false
+        "enabled": true
       }
     }
   },
   "include": [
-    "src/**/*.ts",
-    "services/**/*.ts"
+    "**/*.ts",
+    "!**/*.d.ts"
   ],
   "exclude": [
     "**/*.test.ts",

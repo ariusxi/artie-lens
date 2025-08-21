@@ -21,14 +21,11 @@ export const configTemplate = {
         critical: 30
       },
       cbo: {
-        enabled: false
+        enabled: true
       }
     }
   },
-  include: [
-    "src/**/*.ts",
-    "services/**/*.ts"
-  ],
+  include: ['**/*.ts', '!**/*.d.ts'],
   exclude: [
     "**/*.test.ts",
     "node_modules",

@@ -10,7 +10,7 @@ export interface MetricConfig extends Thresholds {
 export interface MetricResult {
   total: number
   label: string
-  file: string
+  value: string
 }
 
 export interface ArtieConfig {

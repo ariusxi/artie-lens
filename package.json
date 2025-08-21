@@ -18,6 +18,7 @@
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.1",
     "madge": "^8.0.0",
+    "ts-morph": "^26.0.0",
     "typescript": "^5.9.2"
   }
 }

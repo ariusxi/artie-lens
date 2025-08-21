@@ -6,7 +6,7 @@
     },
     "metrics": {
       "lcom": {
-        "enabled": false,
+        "enabled": true,
         "warning": 5,
         "critical": 10
       },

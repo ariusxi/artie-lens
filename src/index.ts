@@ -3,7 +3,7 @@ import { existsSync, writeFileSync } from 'fs'
 
 import { configTemplate } from './templates/config'
 import { ArtieConfig, MetricConfig } from './types/config.interface'
-import { calculateCBO, calculateRFC, printMetric, readFileContent } from './utils'
+import { calculateCBO, calculateLCOM, calculateRFC, printMetric, readFileContent } from './utils'
 
 export function readConfig(): ArtieConfig {
   const filePath = resolve(process.cwd(), '.artierc.json')
@@ -65,23 +65,34 @@ export async function runLens(directory = process.cwd()): Promise<void> {
   const properties = {
     'cbo': calculateCBO,
     'rfc': calculateRFC,
+    'lcom': calculateLCOM,
   }
 
+  console.time('Total time')
   for (const metric of metrics) {
     const thresholds = getMetricConfig(metric)
     const result = await properties[metric](directory, thresholds, config.include, config.exclude)
-    console.log(`${metric} - Total: ${result.length}`)
+    const total = result.reduce((accum, item) => accum + item.total,0)
+    console.log(`${metric} - Total: ${total}`)
 
     for (const item of result) {
-      printMetric(`[${item.label}] ${item.file}: ${item.total}`, item.label)
+      printMetric(`[${item.label}] ${item.value}: ${item.total}`, item.label)
     }
   }
+  console.timeEnd('Total time')
+}
+
+export function showHelp() {
+  console.log('Artie.JS\n')
+  console.log('init - Initialize an .artierc.json file with default settings')
+  console.log('run  - Run the lens for all metrics configured')
 }
 
 const main = async (args: string[]): Promise<void> => {
   const commands = {
     init: initConfig,
     run: runLens,
+    help: showHelp,
   }
 
   const argument = args.slice(2)
@@ -91,7 +102,7 @@ const main = async (args: string[]): Promise<void> => {
   if (parameter && parameter in commands) {
     await commands[parameter as keyof typeof commands](directory)
   } else {
-    console.log('⚠️ Invalid command')
+    console.log('⚠️  Invalid command')
   }
 }
 main(process.argv)

@@ -4,7 +4,6 @@
     "module": "node20",
     "declaration": true,
     "outDir": "dist",
-    "strict": true,
     "esModuleInterop": true
   },
   "include": ["src"]

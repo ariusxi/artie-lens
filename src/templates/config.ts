@@ -1,0 +1,38 @@
+export const configTemplate = {
+  options: {
+    defaultThresholds: {
+      warning: 10,
+      critical: 20
+    },
+    metrics: {
+      lcom: {
+        enabled: true,
+        warning: 5,
+        critical: 10
+      },
+      wmc: {
+        enabled: true,
+        warning: 10,
+        critical: 25
+      },
+      rfc: {
+        enabled: true,
+        warning: 15,
+        critical: 30
+      },
+      cbo: {
+        enabled: false
+      }
+    }
+  },
+  include: [
+    "src/**/*.ts",
+    "services/**/*.ts"
+  ],
+  exclude: [
+    "**/*.test.ts",
+    "node_modules",
+    "dist",
+    "scripts/**"
+  ]
+}

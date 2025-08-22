@@ -2,7 +2,8 @@ export const configTemplate = {
   options: {
     defaultThresholds: {
       warning: 10,
-      critical: 20
+      critical: 20,
+      levels: ["OK", "WARNING", "ERROR"]
     },
     metrics: {
       lcom: {
@@ -25,8 +26,8 @@ export const configTemplate = {
       }
     }
   },
-  include: ['**/*.ts', '!**/*.d.ts'],
-  exclude: [
+  includes: ['**/*.ts', '!**/*.d.ts'],
+  excludes: [
     "**/*.test.ts",
     "node_modules",
     "dist",

@@ -3,17 +3,18 @@ import { resolve, join } from 'path'
 import { red, yellow, green } from 'colorette'
 import { readdirSync, readFileSync } from 'fs'
 import { ClassDeclaration, Project } from 'ts-morph'
-import { CompilerOptions, createProgram, Symbol, forEachChild, isClassDeclaration, isConstructorDeclaration, parseJsonConfigFileContent, Program, readConfigFile, SourceFile, sys, TypeChecker, isPropertyDeclaration } from 'typescript'
+import { MetricsConfiguration, MetricsParser, IMetricsModel } from 'tsmetrics-core'
+import { CompilerOptions, createProgram, Symbol, forEachChild, isClassDeclaration, isConstructorDeclaration, parseJsonConfigFileContent, Program, readConfigFile, SourceFile, sys, TypeChecker, isPropertyDeclaration, ScriptTarget } from 'typescript'
 
 import { MetricConfig, MetricResult } from './types/config.interface'
 
-export async function getSourceFiles(directory: string, include: string[], exclude: string[]): Promise<string[]> {
-  return await fg(include, {
+export async function getSourceFiles(directory: string, includes: string[], excludes: string[]): Promise<string[]> {
+  return await fg(includes, {
     cwd: directory,
     absolute: true,
     onlyFiles: true,
     followSymbolicLinks: false,
-    ignore: exclude,
+    ignore: excludes,
   })
 }
 
@@ -43,6 +44,13 @@ export function getProjectConfigPath(directory: string): string {
   }
 
   return join(directory, configFile)
+}
+
+export function getProjectTarget(configContent: string): ScriptTarget {
+  const configs = JSON.parse(configContent)
+  const target = configs.compilerOptions.target
+
+  return ScriptTarget[target as keyof typeof ScriptTarget] ?? ScriptTarget.ES2015
 }
 
 export function getCompilerOptions(configPath: string): CompilerOptions {
@@ -163,6 +171,19 @@ export function getCohesionLength(classDeclaration: ClassDeclaration): number {
   return Math.max(0, unshared - shared)
 }
 
+export function getComplexityLength(metrics: IMetricsModel[]): number {
+  const total = metrics.reduce((accum, metric) => {
+    if (metric.children.length === 0) {
+      return accum + metric.complexity
+    }
+
+    const value = getComplexityLength(metric.children)
+    return accum + value + metric.complexity
+  }, 0)
+
+  return total
+}
+
 export function createProjectProgram(configPath: string, files: string[]): Program {
   const options = getCompilerOptions(configPath)
   const program = createProgram(files, options)
@@ -173,9 +194,9 @@ export function createProjectProgram(configPath: string, files: string[]): Progr
   return program
 }
 
-export async function calculateCBO(directory: string, metricConfig: MetricConfig, include: string[], exclude: string[]): Promise<MetricResult[]> {
+export async function calculateCBO(directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]): Promise<MetricResult[]> {
   const configPath = getProjectConfigPath(directory)
-  const files = await getSourceFiles(directory, include, exclude)
+  const files = await getSourceFiles(directory, includes, excludes)
 
   const program = createProjectProgram(configPath, files)
   const items = files
@@ -189,8 +210,8 @@ export async function calculateCBO(directory: string, metricConfig: MetricConfig
   return items
 }
 
-export async function calculateRFC(directory: string, metricConfig: MetricConfig, include: string[], exclude: string[]): Promise<MetricResult[]> {
-  const files = await getSourceFiles(directory, include, exclude)
+export async function calculateRFC(directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]): Promise<MetricResult[]> {
+  const files = await getSourceFiles(directory, includes, excludes)
   
   const items = files
     .map((file) => {
@@ -204,8 +225,8 @@ export async function calculateRFC(directory: string, metricConfig: MetricConfig
   return items
 }
 
-export async function calculateLCOM(directory: string, metricConfig: MetricConfig, include: string[], exclude: string[]): Promise<MetricResult[]> {
-  const files = await getSourceFiles(directory, include, exclude)
+export async function calculateLCOM(directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]): Promise<MetricResult[]> {
+  const files = await getSourceFiles(directory, includes, excludes)
   const project = new Project()
 
   project.addSourceFilesAtPaths(files)
@@ -220,6 +241,24 @@ export async function calculateLCOM(directory: string, metricConfig: MetricConfi
       items.push({ total, label, value: className })
     }
   }
+
+  return items
+}
+
+export async function calculateWMC(directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]): Promise<MetricResult[]> {
+  const configPath = getProjectConfigPath(directory)
+  const configContent = readFileContent(configPath)
+
+  const target = getProjectTarget(configContent)
+  const files = await getSourceFiles(directory, includes, excludes)
+
+  const items = files.map((file) => {
+    const { metrics } = MetricsParser.getMetrics(file, MetricsConfiguration, target)
+    const total = getComplexityLength([metrics])
+    const label = getMetricLabel(total, metricConfig)
+
+    return { total, label, value: file }
+  })
 
   return items
 }

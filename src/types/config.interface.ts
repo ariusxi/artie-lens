@@ -1,6 +1,7 @@
 export interface Thresholds {
   warning?: number
   critical?: number
+  levels?: string[]
 }
 
 export interface MetricConfig extends Thresholds {
@@ -14,8 +15,8 @@ export interface MetricResult {
 }
 
 export interface ArtieConfig {
-  include?: string[]
-  exclude?: string[]
+  includes?: string[]
+  excludes?: string[]
   options: {
     defaultThresholds: Thresholds
     metrics: Record<string, MetricConfig>

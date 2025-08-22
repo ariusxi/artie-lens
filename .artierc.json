@@ -2,7 +2,8 @@
   "options": {
     "defaultThresholds": {
       "warning": 10,
-      "critical": 20
+      "critical": 20,
+      "levels": ["WARNING", "ERROR"]
     },
     "metrics": {
       "lcom": {
@@ -11,7 +12,7 @@
         "critical": 10
       },
       "wmc": {
-        "enabled": false,
+        "enabled": true,
         "warning": 10,
         "critical": 25
       },
@@ -25,11 +26,11 @@
       }
     }
   },
-  "include": [
+  "includes": [
     "**/*.ts",
     "!**/*.d.ts"
   ],
-  "exclude": [
+  "excludes": [
     "**/*.test.ts",
     "node_modules",
     "dist",

@@ -3,7 +3,7 @@ import { existsSync, writeFileSync } from 'fs'
 
 import { configTemplate } from './templates/config'
 import { ArtieConfig, MetricConfig } from './types/config.interface'
-import { calculateCBO, calculateLCOM, calculateRFC, printMetric, readFileContent } from './utils'
+import { calculateCBO, calculateLCOM, calculateRFC, calculateWMC, printMetric, readFileContent } from './utils'
 
 export function readConfig(): ArtieConfig {
   const filePath = resolve(process.cwd(), '.artierc.json')
@@ -55,6 +55,7 @@ export function getMetricConfig(metricName: string): MetricConfig {
     enabled: metric.enabled,
     warning: metric.warning ?? defaults.warning,
     critical: metric.critical ?? defaults.critical,
+    levels: metric.levels ?? defaults.levels,
   }
 }
 
@@ -66,17 +67,23 @@ export async function runLens(directory = process.cwd()): Promise<void> {
     'cbo': calculateCBO,
     'rfc': calculateRFC,
     'lcom': calculateLCOM,
+    'wmc': calculateWMC,
   }
 
   console.time('Total time')
   for (const metric of metrics) {
     const thresholds = getMetricConfig(metric)
-    const result = await properties[metric](directory, thresholds, config.include, config.exclude)
-    const total = result.reduce((accum, item) => accum + item.total,0)
+    const result = await properties[metric](directory, thresholds, config.includes, config.excludes)
+    const total = result.reduce((accum, item) => 
+      thresholds.levels.includes(item.label) ? accum + item.total : accum,
+      0,
+    )
     console.log(`${metric} - Total: ${total}`)
 
     for (const item of result) {
-      printMetric(`[${item.label}] ${item.value}: ${item.total}`, item.label)
+      if (thresholds.levels.includes(item.label)){
+        printMetric(`[${item.label}] ${item.value}: ${item.total}`, item.label)
+      }
     }
   }
   console.timeEnd('Total time')

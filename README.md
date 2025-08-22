@@ -18,7 +18,7 @@ npm link # torna a CLI globalmente disponível
 ## ⚡️ Inicialização do projeto
 Para criar o arquivo de configuração base `artierc.json` no diretório atual:
 ```bash
-artie.js init
+artie init
 ```
 Isso vai gerar um arquivo `artierc.json` na raiz do projeto:
 ```json
@@ -26,7 +26,8 @@ Isso vai gerar um arquivo `artierc.json` na raiz do projeto:
   "options": {
     "defaultThresholds": {
       "warning": 10,
-      "critical": 20
+      "critical": 20,
+      "levels": ["OK", "WARNING", "ERROR"]
     },
     "metrics": {
       "lcom": { "enabled": true, "warning": 5, "critical": 10 },
@@ -35,13 +36,21 @@ Isso vai gerar um arquivo `artierc.json` na raiz do projeto:
       "cbo": { "enabled": false }
     }
   },
-  "include": ["src/**/*.ts", "services/**/*.ts"],
-  "exclude": ["**/*.test.ts", "node_modules", "dist", "scripts/**"]
+  "include": [
+    "**/*.ts",
+    "!**/*.d.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "node_modules",
+    "dist",
+    "scripts/**"
+  ]
 }
 ```
 
-## 🛠️ Uso
-Inicializar análise de arquitetura:
+## 🔎 Análise do projeto
+Para analisar os projetos com as configurações definidas:
 ```bash
 artie.js run
 ```

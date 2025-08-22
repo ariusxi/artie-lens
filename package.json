@@ -2,7 +2,7 @@
   "name": "artie.js",
   "version": "1.0.0",
   "description": "An module to check architecture smells",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "author": "Alef Felix",
   "license": "MIT",
   "private": false,
@@ -19,6 +19,7 @@
     "fs-extra": "^11.3.1",
     "madge": "^8.0.0",
     "ts-morph": "^26.0.0",
+    "tsmetrics-core": "^1.4.1",
     "typescript": "^5.9.2"
   }
 }

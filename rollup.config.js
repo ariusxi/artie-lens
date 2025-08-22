@@ -18,6 +18,7 @@ const config = [
         file:  pkg.main,
         format: 'cjs',
         sourcemap: true,
+        banner: '#!/usr/bin/env node'
       },
     ],
   },

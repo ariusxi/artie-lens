@@ -1,6 +1,6 @@
 {
   "name": "artie-lens",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "An module to check architecture smells",
   "main": "artie-lens.js",
   "types": "artie-lens.d.ts",
@@ -13,7 +13,7 @@
     "artie-lens.js.map"
   ],
   "bin": {
-    "artie-lens": "./artie-lens.js"
+    "artie": "./artie-lens.js"
   },
   "repository": {
     "type": "git",

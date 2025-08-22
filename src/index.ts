@@ -1,4 +1,4 @@
-import { resolve } from 'path'
+import path from 'path'
 import { existsSync, writeFileSync } from 'fs'
 
 import { configTemplate } from './templates/config'
@@ -6,7 +6,7 @@ import { ArtieConfig, MetricConfig } from './types/config.interface'
 import { calculateCBO, calculateLCOM, calculateRFC, calculateWMC, printMetric, readFileContent } from './utils'
 
 export function readConfig(): ArtieConfig {
-  const filePath = resolve(process.cwd(), '.artierc.json')
+  const filePath = path.resolve(process.cwd(), '.artierc.json')
   const config = readFileContent(filePath)
 
   return JSON.parse(config)
@@ -26,7 +26,7 @@ export function getEnableMetrics(config: ArtieConfig): string[] {
 }
 
 export function initConfig(): void {
-  const filePath = resolve(process.cwd(), '.artierc.json')
+  const filePath = path.resolve(process.cwd(), '.artierc.json')
   if (existsSync(filePath)) {
     return console.log("⚠️  The file .artierc.json already exists on the current directory.")
   }

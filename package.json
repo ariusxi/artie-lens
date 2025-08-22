@@ -2,16 +2,54 @@
   "name": "artie.js",
   "version": "1.0.0",
   "description": "An module to check architecture smells",
-  "main": "dist/index.js",
+  "main": "artie.d.js",
+  "types": "artie.d.ts",
   "author": "Alef Felix",
   "license": "MIT",
   "private": false,
+  "files": [
+    "artie.d.ts",
+    "artie.js",
+    "artie.js.map"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ariusxi/artie.git"
+  },
+  "keywords": [
+    "software-architecture",
+    "microservices",
+    "monolith",
+    "cohesion",
+    "coupling",
+    "LCOM",
+    "WMC",
+    "software-metrics",
+    "code-quality",
+    "design-patterns",
+    "resilience",
+    "api-gateway",
+    "circuit-breaker",
+    "devops",
+    "ci-cd",
+    "observability",
+    "monitoring",
+    "migration-strategy",
+    "strangler-pattern",
+    "performance",
+    "scalability",
+    "service-autonomy"
+  ],
   "scripts": {
-    "build": "tsc"
+    "build": "rollup -c --bundleConfigAsCjs"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^24.3.0"
+    "@types/node": "^24.3.0",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "rollup": "^4.21.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "tslib": "^2.7.0"
   },
   "dependencies": {
     "colorette": "^2.0.20",

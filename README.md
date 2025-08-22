@@ -1,15 +1,15 @@
-# Artie.JS
+# Artie
 Uma biblioteca em TypeScript para gerenciamento de métricas de código com configuração flexível.
 
 ## 💾 Instalação
 ```bash
 # Instalar módulo global
-npm install -g artie.js
+npm install -g artie
 ```
 Se estiver usando localmente durante o desenvolvimento:
 ```bash
 git clone <repo-url>
-cd artie.js
+cd artie
 npm install
 npm run build
 npm link # torna a CLI globalmente disponível
@@ -52,5 +52,5 @@ Isso vai gerar um arquivo `artierc.json` na raiz do projeto:
 ## 🔎 Análise do projeto
 Para analisar os projetos com as configurações definidas:
 ```bash
-artie.js run
+artie run
 ```

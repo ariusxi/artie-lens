@@ -1,26 +1,26 @@
 # Artie-Lens
-Uma biblioteca em TypeScript para gerenciamento de métricas de código com configuração flexível.
+A TypeScript library for managing code metrics with flexible configuration.
 
-## 💾 Instalação
+## 💾 Installation
 ```bash
-# Instalar módulo global
+# Install globally
 npm install -g artie-lens
 ```
-Se estiver usando localmente durante o desenvolvimento:
+If using locally during development:
 ```bash
 git clone <repo-url>
 cd artie
 npm install
 npm run build
-npm link # torna a CLI globalmente disponível
+npm link # makes the CLI globally available
 ```
 
-## ⚡️ Inicialização do projeto
-Para criar o arquivo de configuração base `artierc.json` no diretório atual:
+## ⚡️ Project Initialization
+To create the base configuration file artierc.json in the current directory:
 ```bash
 artie init
 ```
-Isso vai gerar um arquivo `artierc.json` na raiz do projeto:
+This will generate an artierc.json file at the project root:
 ```json
 {
   "options": {
@@ -49,8 +49,8 @@ Isso vai gerar um arquivo `artierc.json` na raiz do projeto:
 }
 ```
 
-## 🔎 Análise do projeto
-Para analisar os projetos com as configurações definidas:
+## 🔎 Project Analysis
+To analyze the projects using the defined configuration:
 ```bash
 artie run
 ```

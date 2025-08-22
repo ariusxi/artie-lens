@@ -1,8 +1,8 @@
 {
   "name": "artie-lens",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "An module to check architecture smells",
-  "main": "artie-lens.d.js",
+  "main": "artie-lens.js",
   "types": "artie-lens.d.ts",
   "author": "Alef Felix",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "artie-lens.js.map"
   ],
   "bin": {
-    "artie-lens": "artie-lens.d.js"
+    "artie-lens": "./artie-lens.js"
   },
   "repository": {
     "type": "git",

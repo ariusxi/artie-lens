@@ -9,7 +9,7 @@ npm install -g artie-lens
 Se estiver usando localmente durante o desenvolvimento:
 ```bash
 git clone <repo-url>
-cd artie-lens
+cd artie
 npm install
 npm run build
 npm link # torna a CLI globalmente disponível
@@ -18,7 +18,7 @@ npm link # torna a CLI globalmente disponível
 ## ⚡️ Inicialização do projeto
 Para criar o arquivo de configuração base `artierc.json` no diretório atual:
 ```bash
-artie-lens init
+artie init
 ```
 Isso vai gerar um arquivo `artierc.json` na raiz do projeto:
 ```json
@@ -52,5 +52,5 @@ Isso vai gerar um arquivo `artierc.json` na raiz do projeto:
 ## 🔎 Análise do projeto
 Para analisar os projetos com as configurações definidas:
 ```bash
-artie-lens run
+artie run
 ```

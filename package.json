@@ -1,20 +1,20 @@
 {
-  "name": "artie",
+  "name": "artie-lens",
   "version": "1.0.0",
   "description": "An module to check architecture smells",
-  "main": "artie.d.js",
-  "types": "artie.d.ts",
+  "main": "artie-lens.d.js",
+  "types": "artie-lens.d.ts",
   "author": "Alef Felix",
   "license": "MIT",
   "private": false,
   "files": [
-    "artie.d.ts",
-    "artie.js",
-    "artie.js.map"
+    "artie-lens.d.ts",
+    "artie-lens.js",
+    "artie-lens.js.map"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ariusxi/artie.git"
+    "url": "git+https://github.com/ariusxi/artie-lens.git"
   },
   "keywords": [
     "software-architecture",

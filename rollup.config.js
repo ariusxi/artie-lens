@@ -24,7 +24,7 @@ const config = [
   {
     input: 'src/index.ts',
     output: {
-      file: 'artie.d.ts',
+      file: 'artie-lens.d.ts',
       format: 'es',
     },
     plugins: [dts()],

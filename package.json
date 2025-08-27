@@ -1,6 +1,6 @@
 {
   "name": "artie-lens",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "An module to check architecture smells",
   "main": "artie-lens.js",
   "types": "artie-lens.d.ts",

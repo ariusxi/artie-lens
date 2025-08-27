@@ -23,7 +23,7 @@ const config = [
     ],
   },
   {
-    input: 'src/index.ts',
+    input: 'src/types.ts',
     output: {
       file: 'artie-lens.d.ts',
       format: 'es',

@@ -195,6 +195,29 @@ export function createProjectProgram(configPath: string, files: string[]): Progr
   return program
 }
 
+export const metricInsights: Record<string, Record<string, string>> = {
+  lcom: {
+    OK: "Cohesion is healthy. Classes are focused.",
+    WARNING: "Cohesion is getting weaker → the class may be mixing multiple responsibilities.",
+    CRITICAL: "Very low cohesion → the class is handling too many concerns. Suggestion: split into smaller classes (SRP)."
+  },
+  wmc: {
+    OK: "Complexity is under control.",
+    WARNING: "Complexity is increasing → consider extracting helper methods or simplifying logic.",
+    CRITICAL: "High complexity → difficult to test and maintain. Suggestion: refactor into smaller methods or delegate responsibilities to services."
+  },
+  cbo: {
+    OK: "Coupling level is acceptable.",
+    WARNING: "Coupling is getting higher → class depends on many others.",
+    CRITICAL: "High coupling → changes in other classes may easily break this one. Suggestion: apply Dependency Inversion or create interfaces."
+  },
+  rfc: {
+    OK: "Response set is small and manageable.",
+    WARNING: "Class exposes too many methods → consider reducing its interface.",
+    CRITICAL: "Very high number of accessible methods → too many responsibilities. Suggestion: encapsulate better and remove unnecessary methods."
+  }
+}
+
 export async function calculateCBO(directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]): Promise<MetricResult[]> {
   const configPath = getProjectConfigPath(directory)
   const files = await getSourceFiles(directory, includes, excludes)

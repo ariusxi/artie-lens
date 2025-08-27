@@ -3,7 +3,7 @@
     "defaultThresholds": {
       "warning": 10,
       "critical": 20,
-      "levels": ["WARNING", "ERROR"]
+      "levels": ["WARNING", "CRITICAL"]
     },
     "metrics": {
       "lcom": {

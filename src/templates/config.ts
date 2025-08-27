@@ -3,7 +3,7 @@ export const configTemplate = {
     defaultThresholds: {
       warning: 10,
       critical: 20,
-      levels: ["OK", "WARNING", "ERROR"]
+      levels: ["OK", "WARNING", "CRITICAL"]
     },
     metrics: {
       lcom: {

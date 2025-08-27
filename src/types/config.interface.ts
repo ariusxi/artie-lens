@@ -14,6 +14,14 @@ export interface MetricResult {
   value: string
 }
 
+export interface MetricInsights {
+  total: number
+  max: number
+  min: number
+  average: string
+  deviation: string
+}
+
 export interface ArtieConfig {
   includes?: string[]
   excludes?: string[]

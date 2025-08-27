@@ -2,8 +2,8 @@ import path from 'path'
 import { existsSync, writeFileSync } from 'fs'
 
 import { configTemplate } from './templates/config'
-import { ArtieConfig, MetricConfig } from './types/config.interface'
-import { calculateCBO, calculateLCOM, calculateRFC, calculateWMC, printMetric, readFileContent } from './utils'
+import { ArtieConfig, MetricConfig, MetricInsights, MetricResult } from './types/config.interface'
+import { calculateCBO, calculateLCOM, calculateRFC, calculateWMC, metricInsights, printMetric, readFileContent } from './utils'
 
 export function readConfig(): ArtieConfig {
   const filePath = path.resolve(process.cwd(), '.artierc.json')
@@ -23,6 +23,36 @@ export function getEnableMetrics(config: ArtieConfig): string[] {
   }
 
   return enabled
+}
+
+export function getMetricIndexes(result: MetricResult[]): MetricInsights {
+  if (result.length === 0) {
+    return {
+      total: 0,
+      max: 0,
+      min: 0,
+      average: '0',
+      deviation: '0',
+    }
+  }
+
+  const values = result.map((r) => r.total)
+  const total = values.reduce((a, b) => a + b, 0)
+
+  const average = total / values.length
+  const max = Math.max(...values)
+  const min = Math.min(...values)
+
+  const variance = values.reduce((acc, v) => acc + Math.pow(v - average, 2), 0) / values.length
+  const deviation = Math.sqrt(variance)
+
+  return {
+    total,
+    max,
+    min,
+    average: average.toFixed(2),
+    deviation: deviation.toFixed(2),
+  }
 }
 
 export function initConfig(): void {
@@ -74,17 +104,28 @@ export async function runLens(directory = process.cwd()): Promise<void> {
   for (const metric of metrics) {
     const thresholds = getMetricConfig(metric)
     const result = await properties[metric](directory, thresholds, config.includes, config.excludes)
-    const total = result.reduce((accum, item) => 
-      thresholds.levels.includes(item.label) ? accum + item.total : accum,
-      0,
-    )
-    console.log(`${metric} - Total: ${total}`)
+    
+    console.log(`\n${metric.toUpperCase()}`)
+    const indexes = getMetricIndexes(result)
+    console.log(`📊 Metrics:`)
+    console.log(`- Total: ${indexes.total}`)
+    console.log(`- Average: ${indexes.average}`)
+    console.log(`- Maximum: ${indexes.max}`)
+    console.log(`- Minimum: ${indexes.min}`)
+    console.log(`- Standard Deviation: ${indexes.deviation}`)
 
-    for (const item of result) {
-      if (thresholds.levels.includes(item.label)){
-        printMetric(`[${item.label}] ${item.value}: ${item.total}`, item.label)
-      }
+    if (indexes.total !== 0) {
+      console.log('\nFiles:')
+      for (const item of result) {
+        if (thresholds.levels.includes(item.label)){
+          printMetric(`[${item.label}] ${item.value} → ${item.total}`, item.label)
+
+          const insight = metricInsights[metric][item.label]
+          console.log(`   💡 ${insight}`)
+        }
+      } 
     }
+    console.log('---')
   }
   console.timeEnd('Total time')
 }

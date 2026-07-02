@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/ariusxi/artie-lens/compare/v1.1.2...v1.2.0) (2026-07-02)
+
+
+### Features
+
+* add DIT and NOC inheritance metrics ([05b2b0c](https://github.com/ariusxi/artie-lens/commit/05b2b0c6d72898e34bd218bac04d97f7eda57b5d))
+
 ## [1.1.2](https://github.com/ariusxi/artie-lens/compare/v1.1.1...v1.1.2) (2026-07-02)
 
 

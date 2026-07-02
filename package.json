@@ -1,6 +1,6 @@
 {
   "name": "artie-lens",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "AST-based CK design metrics (WMC, DIT, NOC, CBO, RFC, LCOM) for TypeScript projects",
   "main": "artie-lens.js",
   "types": "artie-lens.d.ts",

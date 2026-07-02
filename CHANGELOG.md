@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/ariusxi/artie-lens/compare/v1.4.0...v1.5.0) (2026-07-02)
+
+
+### Features
+
+* add module-level CE and circular-dependency metrics ([93d59e6](https://github.com/ariusxi/artie-lens/commit/93d59e6e5f2747f74532dae9f7ea15e10457f9fb))
+
 # [1.4.0](https://github.com/ariusxi/artie-lens/compare/v1.3.0...v1.4.0) (2026-07-02)
 
 

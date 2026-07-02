@@ -3,7 +3,7 @@ import { MetricsConfiguration, MetricsParser } from 'tsmetrics-core'
 
 import { MetricConfig, MetricResult } from '../types/config.interface'
 import { getProjectConfigPath, getProjectTarget, getSourceFiles, readFileContent } from './fileHelpers'
-import { createProjectProgram, getClassDependenciesLength, getCohesionLength, getComplexityLength, getFunctionsLength } from './classHelpers'
+import { createProjectProgram, getClassDependenciesLength, getCohesionLength, getComplexityLength, getResponseSetLength } from './classHelpers'
 
 export function getMetricLabel(total: number, metricConfig: MetricConfig): string {
   if (total >= metricConfig.critical!) return 'CRITICAL'
@@ -30,8 +30,8 @@ export const metricInsights: Record<string, Record<string, string>> = {
   },
   rfc: {
     OK: "Response set is small and manageable.",
-    WARNING: "Class exposes too many methods → consider reducing its interface.",
-    CRITICAL: "Very high number of accessible methods → too many responsibilities. Suggestion: encapsulate better and remove unnecessary methods."
+    WARNING: "Growing response set → the class can trigger many methods, making testing and debugging harder.",
+    CRITICAL: "Very large response set → too many methods can execute in response to a message. Suggestion: split responsibilities and reduce calls to other classes."
   }
 }
 
@@ -55,15 +55,20 @@ export async function calculateCBO(directory: string, metricConfig: MetricConfig
 export async function calculateRFC(directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]): Promise<MetricResult[]> {
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
-  
-  const items = files
-    .map((file) => {
-      const content = readFileContent(file)
-      const total = getFunctionsLength(content)
+
+  const project = new Project()
+  project.addSourceFilesAtPaths(files)
+
+  const items = []
+  for (const sourceFile of project.getSourceFiles()) {
+    for (const classDeclaration of sourceFile.getClasses()) {
+      const className = classDeclaration.getName() ?? '[UnnamedClass]'
+      const total = getResponseSetLength(classDeclaration)
       const label = getMetricLabel(total, metricConfig)
 
-      return { total, label, value: file }
-    })
+      items.push({ total, label, value: className })
+    }
+  }
 
   return items
 }

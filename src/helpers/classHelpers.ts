@@ -1,5 +1,4 @@
 import { CallExpression, ClassDeclaration, Node, SyntaxKind, Type } from 'ts-morph'
-import { IMetricsModel } from 'tsmetrics-core'
 
 function isExternalDeclaration(declaration: Node): boolean {
   const sourceFile = declaration.getSourceFile()
@@ -172,17 +171,54 @@ export function getCohesionLength(classDeclaration: ClassDeclaration): number {
   return Math.max(0, unshared - shared)
 }
 
-export function getComplexityLength(metrics: IMetricsModel[]): number {
-  const total = metrics.reduce((accum, metric) => {
-    if (metric.children.length === 0) {
-      return accum + metric.complexity
+const DECISION_KINDS = [
+  SyntaxKind.IfStatement,
+  SyntaxKind.ForStatement,
+  SyntaxKind.ForInStatement,
+  SyntaxKind.ForOfStatement,
+  SyntaxKind.WhileStatement,
+  SyntaxKind.DoStatement,
+  SyntaxKind.CaseClause,
+  SyntaxKind.ConditionalExpression,
+  SyntaxKind.CatchClause,
+]
+
+function getMethodComplexity(method: Node): number {
+  let complexity = 1
+
+  for (const kind of DECISION_KINDS) {
+    complexity += method.getDescendantsOfKind(kind).length
+  }
+
+  for (const binary of method.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
+    const operator = binary.getOperatorToken().getKind()
+    if (
+      operator === SyntaxKind.AmpersandAmpersandToken ||
+      operator === SyntaxKind.BarBarToken ||
+      operator === SyntaxKind.QuestionQuestionToken
+    ) {
+      complexity += 1
     }
+  }
 
-    const value = getComplexityLength(metric.children)
-    return accum + value + metric.complexity
-  }, 0)
+  return complexity
+}
 
-  return total
+export function getWeightedMethods(classDeclaration: ClassDeclaration): number {
+  const methods: Node[] = [
+    ...classDeclaration.getConstructors(),
+    ...classDeclaration.getMethods().filter((method) => !method.isOverload()),
+    ...classDeclaration.getGetAccessors(),
+    ...classDeclaration.getSetAccessors(),
+  ]
+
+  for (const property of classDeclaration.getProperties()) {
+    if (!property.isStatic() && isFunctionInitializer(property.getInitializer())) {
+      methods.push(property.getInitializerOrThrow())
+    }
+  }
+
+  return methods.reduce((total, method) => total + getMethodComplexity(method), 0)
 }
 
 function getOwnMemberKey(name: string, kindName: string): string {

@@ -60,7 +60,6 @@
     "fs-extra": "^11.3.1",
     "madge": "^8.0.0",
     "ts-morph": "^26.0.0",
-    "tsmetrics-core": "^1.4.1",
     "typescript": "^5.9.2"
   }
 }

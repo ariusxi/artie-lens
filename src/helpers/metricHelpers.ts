@@ -1,9 +1,8 @@
 import { Project } from 'ts-morph'
-import { MetricsConfiguration, MetricsParser } from 'tsmetrics-core'
 
 import { MetricConfig, MetricResult } from '../types/config.interface'
-import { getProjectConfigPath, getProjectTarget, getSourceFiles, readFileContent } from './fileHelpers'
-import { getCohesionLength, getComplexityLength, getCoupledClasses, getResponseSetLength } from './classHelpers'
+import { getSourceFiles } from './fileHelpers'
+import { getCohesionLength, getCoupledClasses, getResponseSetLength, getWeightedMethods } from './classHelpers'
 
 export function getMetricLabel(total: number, metricConfig: MetricConfig): string {
   if (total >= metricConfig.critical!) return 'CRITICAL'
@@ -99,20 +98,22 @@ export async function calculateLCOM(directory: string, metricConfig: MetricConfi
 }
 
 export async function calculateWMC(directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]): Promise<MetricResult[]> {
-  const configPath = getProjectConfigPath(directory)
-  const configContent = readFileContent(configPath)
-
-  const target = getProjectTarget(configContent)
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
-  const items = files.map((file) => {
-    const { metrics } = MetricsParser.getMetrics(file, MetricsConfiguration, target)
-    const total = getComplexityLength([metrics])
-    const label = getMetricLabel(total, metricConfig)
+  const project = new Project()
+  project.addSourceFilesAtPaths(files)
 
-    return { total, label, value: file }
-  })
+  const items = []
+  for (const sourceFile of project.getSourceFiles()) {
+    for (const classDeclaration of sourceFile.getClasses()) {
+      const className = classDeclaration.getName() ?? '[UnnamedClass]'
+      const total = getWeightedMethods(classDeclaration)
+      const label = getMetricLabel(total, metricConfig)
+
+      items.push({ total, label, value: className })
+    }
+  }
 
   return items
 }

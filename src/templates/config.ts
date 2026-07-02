@@ -23,6 +23,16 @@ export const configTemplate = {
       },
       cbo: {
         enabled: true
+      },
+      dit: {
+        enabled: true,
+        warning: 4,
+        critical: 6
+      },
+      noc: {
+        enabled: true,
+        warning: 10,
+        critical: 20
       }
     }
   },

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { calculateCBO, calculateLCOM, calculateRFC, calculateWMC } from '../src/helpers/metricHelpers'
+import { calculateCBO, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC } from '../src/helpers/metricHelpers'
 import { cleanupProjects, createProject, thresholds, totalOf } from './utils'
 
 const run = (fn: typeof calculateWMC, directory: string) => fn(directory, thresholds, ['**/*.ts'], [])
@@ -203,5 +203,40 @@ describe('LCOM (Lack of Cohesion in Methods)', () => {
     })
 
     expect(totalOf(await run(calculateLCOM, directory), 'Mixed')).toBe(2)
+  })
+})
+
+describe('DIT (Depth of Inheritance Tree)', () => {
+  it('counts the depth of the extends chain across files', async () => {
+    const directory = createProject({
+      'root.ts': `export class Root {}`,
+      'level1.ts': `import { Root } from './root'
+        export class Level1 extends Root {}`,
+      'level2.ts': `import { Level1 } from './level1'
+        export class Level2 extends Level1 {}`,
+    })
+
+    const results = await run(calculateDIT, directory)
+    expect(totalOf(results, 'Root')).toBe(0)
+    expect(totalOf(results, 'Level1')).toBe(1)
+    expect(totalOf(results, 'Level2')).toBe(2)
+  })
+})
+
+describe('NOC (Number of Children)', () => {
+  it('counts only immediate subclasses, not deeper descendants', async () => {
+    const directory = createProject({
+      'base.ts': `export class Base {}`,
+      'children.ts': `import { Base } from './base'
+        export class ChildA extends Base {}
+        export class ChildB extends Base {}
+        export class GrandChild extends ChildA {}`,
+    })
+
+    const results = await run(calculateNOC, directory)
+    expect(totalOf(results, 'Base')).toBe(2)
+    expect(totalOf(results, 'ChildA')).toBe(1)
+    expect(totalOf(results, 'ChildB')).toBe(0)
+    expect(totalOf(results, 'GrandChild')).toBe(0)
   })
 })

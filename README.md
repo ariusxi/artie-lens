@@ -48,6 +48,8 @@ Higher values mean higher complexity/risk.
 | Metric | Name | What it measures | High value suggests |
 | --- | --- | --- | --- |
 | **WMC** | Weighted Methods per Class | Sum of the cyclomatic complexity of each method (constructors, accessors and arrow-function fields included). With trivial methods it equals the method count. | Class is doing too much; hard to test/maintain. |
+| **DIT** | Depth of Inheritance Tree | Length of the `extends` chain from the class up to the root (a root class is `0`). | Behavior is harder to predict; many inherited methods. |
+| **NOC** | Number of Children | Number of **immediate** subclasses (direct children only, not deeper descendants). | Possible misuse of subclassing or a leaky base abstraction. |
 | **CBO** | Coupling Between Object classes | Number of **other classes** this class depends on — via heritage, parameter/property/return types, and usages inside method bodies (`new`, calls, member access). | Fragile design; changes elsewhere ripple in. |
 | **RFC** | Response For a Class | Size of the response set: the class's own methods **plus** the first-level methods they call. | Testing/debugging is harder (many methods can run per message). |
 | **LCOM** | Lack of Cohesion in Methods | Pairs of methods that share **no** instance variable, minus the pairs that do (floored at 0). `0` when methods are cohesive or use no instance state. | Class mixes unrelated responsibilities; consider splitting (SRP). |
@@ -62,6 +64,9 @@ Higher values mean higher complexity/risk.
   to library/`node_modules`/declaration-file functions (e.g. `console.log`).
 - **LCOM** excludes static methods, counts constructor **parameter properties** as instance
   variables, and does not track destructuring access (`const { x } = this`).
+- **DIT** follows the `extends` chain and counts every ancestor class it can resolve,
+  including external base classes when they are declared as classes in available typings.
+- **NOC** counts immediate subclasses found **within the analyzed project** only.
 
 ## Configuration
 
@@ -79,7 +84,9 @@ Higher values mean higher complexity/risk.
       "lcom": { "enabled": true, "warning": 5, "critical": 10 },
       "wmc": { "enabled": true, "warning": 10, "critical": 25 },
       "rfc": { "enabled": true, "warning": 15, "critical": 30 },
-      "cbo": { "enabled": true }
+      "cbo": { "enabled": true },
+      "dit": { "enabled": true, "warning": 4, "critical": 6 },
+      "noc": { "enabled": true, "warning": 10, "critical": 20 }
     }
   },
   "includes": ["**/*.ts", "!**/*.d.ts"],

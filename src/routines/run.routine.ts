@@ -1,6 +1,6 @@
 import { printMetric } from '../helpers/printHelpers'
 import { MetricConfig, MetricInsights, MetricResult } from '../types/config.interface'
-import { calculateCBO, calculateLCOM, calculateRFC, calculateWMC, metricInsights } from '../helpers/metricHelpers'
+import { calculateCBO, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC, metricInsights } from '../helpers/metricHelpers'
 import { getEnableMetrics, getMetricConfig, getMetricIndexes, readConfig } from '../helpers/configHelpers'
 
 type MetricFunction = (
@@ -15,6 +15,8 @@ const metricsMap: Record<string, MetricFunction> = {
   rfc: calculateRFC,
   lcom: calculateLCOM,
   wmc: calculateWMC,
+  dit: calculateDIT,
+  noc: calculateNOC,
 }
 
 function printMetricSummary(metric: string, indexes: MetricInsights) {

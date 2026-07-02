@@ -221,6 +221,26 @@ export function getWeightedMethods(classDeclaration: ClassDeclaration): number {
   return methods.reduce((total, method) => total + getMethodComplexity(method), 0)
 }
 
+export function getDepthOfInheritance(classDeclaration: ClassDeclaration): number {
+  let depth = 0
+  let current = classDeclaration.getBaseClass()
+
+  while (current) {
+    depth += 1
+    current = current.getBaseClass()
+  }
+
+  return depth
+}
+
+export function getNumberOfChildren(classDeclaration: ClassDeclaration): number {
+  // getDerivedClasses() returns all descendants; keep only immediate children
+  return classDeclaration
+    .getDerivedClasses()
+    .filter((derived) => derived.getBaseClass() === classDeclaration)
+    .length
+}
+
 function getOwnMemberKey(name: string, kindName: string): string {
   return `own:${kindName}:${name}`
 }

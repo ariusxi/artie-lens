@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/ariusxi/artie-lens/compare/v1.3.0...v1.4.0) (2026-07-02)
+
+
+### Features
+
+* add baseline diff mode to gate CI on regressions only ([d6c5846](https://github.com/ariusxi/artie-lens/commit/d6c584696e3bc62df2789ac40a1955f64cb4e636))
+
 # [1.3.0](https://github.com/ariusxi/artie-lens/compare/v1.2.0...v1.3.0) (2026-07-02)
 
 

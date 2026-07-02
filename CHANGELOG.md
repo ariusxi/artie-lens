@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/ariusxi/artie-lens/compare/v1.2.0...v1.3.0) (2026-07-02)
+
+
+### Features
+
+* add --json output and --fail-on exit code for CI gating ([f377737](https://github.com/ariusxi/artie-lens/commit/f3777370e96437448fb796a199bf5d97a8e6f7fb))
+
 # [1.2.0](https://github.com/ariusxi/artie-lens/compare/v1.1.2...v1.2.0) (2026-07-02)
 
 

@@ -3,7 +3,7 @@ import { MetricsConfiguration, MetricsParser } from 'tsmetrics-core'
 
 import { MetricConfig, MetricResult } from '../types/config.interface'
 import { getProjectConfigPath, getProjectTarget, getSourceFiles, readFileContent } from './fileHelpers'
-import { createProjectProgram, getClassDependenciesLength, getCohesionLength, getComplexityLength, getResponseSetLength } from './classHelpers'
+import { getCohesionLength, getComplexityLength, getCoupledClasses, getResponseSetLength } from './classHelpers'
 
 export function getMetricLabel(total: number, metricConfig: MetricConfig): string {
   if (total >= metricConfig.critical!) return 'CRITICAL'
@@ -36,18 +36,22 @@ export const metricInsights: Record<string, Record<string, string>> = {
 }
 
 export async function calculateCBO(directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]): Promise<MetricResult[]> {
-  const configPath = getProjectConfigPath(directory)
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
-  const program = createProjectProgram(configPath, files)
-  const items = files
-    .map((file) => {
-      const total = getClassDependenciesLength(file, program)
+  const project = new Project()
+  project.addSourceFilesAtPaths(files)
+
+  const items = []
+  for (const sourceFile of project.getSourceFiles()) {
+    for (const classDeclaration of sourceFile.getClasses()) {
+      const className = classDeclaration.getName() ?? '[UnnamedClass]'
+      const total = getCoupledClasses(classDeclaration).size
       const label = getMetricLabel(total, metricConfig)
 
-      return { total, label, value: file }
-    })
+      items.push({ total, label, value: className })
+    }
+  }
 
   return items
 }

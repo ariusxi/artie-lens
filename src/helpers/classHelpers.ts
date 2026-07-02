@@ -1,82 +1,91 @@
-import { CallExpression, ClassDeclaration, Node, SyntaxKind } from 'ts-morph'
+import { CallExpression, ClassDeclaration, Node, SyntaxKind, Type } from 'ts-morph'
 import { IMetricsModel } from 'tsmetrics-core'
-import { createProgram, forEachChild, isClassDeclaration, isConstructorDeclaration, isPropertyDeclaration, Program, SourceFile, Symbol, TypeChecker } from 'typescript'
 
-import { getCompilerOptions, getSourceFileByPath } from './fileHelpers'
+function isExternalDeclaration(declaration: Node): boolean {
+  const sourceFile = declaration.getSourceFile()
+  return sourceFile.isInNodeModules() || sourceFile.isDeclarationFile()
+}
 
-export function addClassDependencyFromSymbol(symbol: Symbol, dependencies: Set<string>): void {
-  const name = symbol.getName()
-  const declarations = symbol.getDeclarations()
+function addCoupledClass(declaration: Node | undefined, self: ClassDeclaration, coupled: Set<ClassDeclaration>): void {
+  if (!declaration || !Node.isClassDeclaration(declaration)) return
+  if (declaration === self || isExternalDeclaration(declaration)) return
 
-  if (!declarations && !dependencies.has(name)) {
-    dependencies.add(name)
+  coupled.add(declaration)
+}
+
+function addCoupledFromType(type: Type, self: ClassDeclaration, coupled: Set<ClassDeclaration>, seen = new Set<Type>()): void {
+  if (seen.has(type)) return
+  seen.add(type)
+
+  if (type.isUnionOrIntersection()) {
+    for (const inner of type.getUnionTypes().concat(type.getIntersectionTypes())) {
+      addCoupledFromType(inner, self, coupled, seen)
+    }
     return
   }
 
-  for (const declaration of declarations!) {
-    if (isClassDeclaration(declaration) && declaration.name) {
-      const className = declaration.name.text
-      dependencies.add(className)
-      return
-    }
+  const declaration = (type.getSymbol() ?? type.getAliasSymbol())?.getDeclarations()[0]
+  addCoupledClass(declaration, self, coupled)
+
+  for (const argument of type.getTypeArguments()) {
+    addCoupledFromType(argument, self, coupled, seen)
   }
 }
 
-export function addClassDependencies(property: any, typeChecker: TypeChecker, dependencies: Set<string>): void {
-  const type = typeChecker.getTypeAtLocation(property)
-  const symbol = type.getSymbol()
-  if (symbol) addClassDependencyFromSymbol(symbol, dependencies)
+function addCoupledFromUsage(node: Node, self: ClassDeclaration, coupled: Set<ClassDeclaration>): void {
+  const declaration = node.getSymbol()?.getDeclarations()[0]
+  if (!declaration) return
+
+  const owner = declaration.getFirstAncestorByKind(SyntaxKind.ClassDeclaration)
+  addCoupledClass(owner ?? declaration, self, coupled)
 }
 
-export function collectClassDependencies(sourceFile: SourceFile, typeChecker: TypeChecker): Set<string> {
-  const dependencies = new Set<string>()
+export function getCoupledClasses(classDeclaration: ClassDeclaration): Set<ClassDeclaration> {
+  const coupled = new Set<ClassDeclaration>()
 
-  forEachChild(sourceFile, (node) => {
-    if (isClassDeclaration(node) && node.name) {
-      node.members.forEach((member) => {
-        if (isConstructorDeclaration(member)) {
-          member.parameters.forEach((parameter) => 
-            addClassDependencies(parameter, typeChecker, dependencies)
-          )
-        }
-
-        if (isPropertyDeclaration(member) && member.initializer) {
-          addClassDependencies(member.initializer, typeChecker, dependencies)
-        }
-
-        if (node.heritageClauses) {
-          node.heritageClauses.forEach((clause) => {
-            clause.types.forEach((type) => addClassDependencies(type, typeChecker, dependencies))
-          })
-        }
-      })
+  // Heritage coupling (extends / implements); interfaces resolve to non-class declarations and are ignored
+  for (const clause of classDeclaration.getHeritageClauses()) {
+    for (const typeNode of clause.getTypeNodes()) {
+      addCoupledFromType(typeNode.getType(), classDeclaration, coupled)
     }
-  })
-
-  return dependencies
-}
-
-export function getClassDependenciesLength(filePath: string, program: Program): number {
-  const sourceFile = getSourceFileByPath(filePath, program)
-  if (!sourceFile) return 0
-  
-  const typeChecker = program.getTypeChecker()
-  const dependencies = collectClassDependencies(sourceFile, typeChecker)
-
-  return dependencies.size
-}
-
-
-export function createProjectProgram(configPath: string, files: string[]): Program {
-  const options = getCompilerOptions(configPath)
-  const program = createProgram(files, options)
-  if (!program) {
-    throw new Error('Failed to create project program')
   }
 
-  return program
-}
+  // Signature coupling: parameter and return types of constructors, methods and accessors, plus property types
+  for (const constructor of classDeclaration.getConstructors()) {
+    for (const parameter of constructor.getParameters()) {
+      addCoupledFromType(parameter.getType(), classDeclaration, coupled)
+    }
+  }
 
+  const returnables = [
+    ...classDeclaration.getMethods(),
+    ...classDeclaration.getGetAccessors(),
+    ...classDeclaration.getSetAccessors(),
+  ]
+  for (const signature of returnables) {
+    for (const parameter of signature.getParameters()) {
+      addCoupledFromType(parameter.getType(), classDeclaration, coupled)
+    }
+    addCoupledFromType(signature.getReturnType(), classDeclaration, coupled)
+  }
+
+  for (const property of classDeclaration.getProperties()) {
+    addCoupledFromType(property.getType(), classDeclaration, coupled)
+  }
+
+  // Behavioral coupling: instantiations, method calls and property accesses on other classes
+  for (const created of classDeclaration.getDescendantsOfKind(SyntaxKind.NewExpression)) {
+    addCoupledFromType(created.getType(), classDeclaration, coupled)
+  }
+  for (const call of classDeclaration.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    addCoupledFromUsage(call.getExpression(), classDeclaration, coupled)
+  }
+  for (const access of classDeclaration.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)) {
+    addCoupledFromUsage(access, classDeclaration, coupled)
+  }
+
+  return coupled
+}
 
 export function getCohesionLength(classDeclaration: ClassDeclaration): number {
   const methods = classDeclaration.getMethods()

@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/ariusxi/artie-lens/compare/v1.6.0...v1.7.0) (2026-07-02)
+
+
+### Features
+
+* add --watch dev loop and --suggest refactoring advice ([4a87ab4](https://github.com/ariusxi/artie-lens/commit/4a87ab401b38393eb628b15874d872f3e6139258))
+
 # [1.6.0](https://github.com/ariusxi/artie-lens/compare/v1.5.0...v1.6.0) (2026-07-02)
 
 

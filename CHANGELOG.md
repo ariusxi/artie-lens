@@ -1,3 +1,15 @@
+# [1.6.0](https://github.com/ariusxi/artie-lens/compare/v1.5.0...v1.6.0) (2026-07-02)
+
+
+### Bug Fixes
+
+* honor tsconfig path aliases and scope analysis to globbed files ([ff77758](https://github.com/ariusxi/artie-lens/commit/ff7775852a706836410d31ae8537a4f7ef9be314))
+
+
+### Features
+
+* add composite GitHub Action wrapping the CLI ([89bd0ee](https://github.com/ariusxi/artie-lens/commit/89bd0ee130652f43bc4d140947519435f681afdf))
+
 # [1.5.0](https://github.com/ariusxi/artie-lens/compare/v1.4.0...v1.5.0) (2026-07-02)
 
 

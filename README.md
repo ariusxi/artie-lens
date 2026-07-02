@@ -207,6 +207,36 @@ GitHub Actions example:
   run: npx artie-lens run --baseline --fail-on=warning
 ```
 
+### GitHub Action
+
+A composite action wraps the CLI (it sets up Node and runs `artie-lens` for you). It reads
+`.artierc.json` from the repository root:
+
+```yaml
+- uses: ariusxi/artie-lens@v1
+  with:
+    directory: .
+    fail-on: critical
+```
+
+Gate on regressions instead (commit `.artie-baseline.json` first):
+
+```yaml
+- uses: ariusxi/artie-lens@v1
+  with:
+    baseline: 'true'
+    fail-on: warning
+```
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `directory` | `.` | Directory to analyze. |
+| `fail-on` | (none) | Fail the job when a class reaches `warning` or `critical`. |
+| `baseline` | (none) | `true` for the default baseline file, or a path. Reports only regressions. |
+| `json` | `false` | Print the report as JSON. |
+| `version` | `latest` | `artie-lens` version to run. |
+| `node-version` | `20` | Node.js version to set up. |
+
 ## Contributing
 
 Releases are automated with [semantic-release](https://semantic-release.gitbook.io/), so

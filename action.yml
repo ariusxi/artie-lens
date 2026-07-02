@@ -1,0 +1,58 @@
+name: 'Artie Lens'
+description: 'Run artie-lens design metrics and gate CI on quality or regressions'
+author: 'Alef Felix'
+branding:
+  icon: 'crosshair'
+  color: 'blue'
+
+inputs:
+  directory:
+    description: 'Directory to analyze'
+    required: false
+    default: '.'
+  fail-on:
+    description: 'Fail (exit 1) if any class reaches this level: warning or critical'
+    required: false
+    default: ''
+  baseline:
+    description: 'Compare against a baseline. Use "true" for the default file, or a path'
+    required: false
+    default: ''
+  json:
+    description: 'Print the report as JSON'
+    required: false
+    default: 'false'
+  version:
+    description: 'artie-lens version to run via npx'
+    required: false
+    default: 'latest'
+  node-version:
+    description: 'Node.js version to set up'
+    required: false
+    default: '20'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - shell: bash
+      env:
+        INPUT_DIRECTORY: ${{ inputs.directory }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_BASELINE: ${{ inputs.baseline }}
+        INPUT_JSON: ${{ inputs.json }}
+        INPUT_VERSION: ${{ inputs.version }}
+      run: |
+        set -e
+        args=(run "$INPUT_DIRECTORY")
+        if [ -n "$INPUT_FAIL_ON" ]; then args+=(--fail-on="$INPUT_FAIL_ON"); fi
+        if [ "$INPUT_BASELINE" = "true" ]; then
+          args+=(--baseline)
+        elif [ -n "$INPUT_BASELINE" ]; then
+          args+=(--baseline="$INPUT_BASELINE")
+        fi
+        if [ "$INPUT_JSON" = "true" ]; then args+=(--json); fi
+        npx --yes "artie-lens@$INPUT_VERSION" "${args[@]}"

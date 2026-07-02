@@ -156,12 +156,14 @@ console.log(results) // [{ total: 25, label: 'CRITICAL', value: 'UserService' },
 
 | Option | Description |
 | --- | --- |
-| `--json` | Print the full report as JSON (metrics, per-class summary, and a `failed` flag) instead of the colored output. |
+| `--json` | Print the full report as JSON (metrics, per-class summary, regressions, and a `failed` flag) instead of the colored output. |
 | `--fail-on=LEVEL` | Exit with code `1` if any class reaches `LEVEL` (`WARNING` or `CRITICAL`). Without it the command always exits `0`. |
+| `--save-baseline[=FILE]` | Save the current run as a baseline (default `.artie-baseline.json`) and exit `0`. |
+| `--baseline[=FILE]` | Compare the current run against a baseline and report only **regressions** (classes that crossed into a worse band, or new offending classes). |
 
 ## Continuous integration
 
-Use `--fail-on` to gate a pipeline on design quality, and `--json` to feed the report
+Use `--fail-on` to gate a pipeline on absolute quality, and `--json` to feed the report
 into other tooling:
 
 ```bash
@@ -169,11 +171,24 @@ artie run --fail-on=critical    # exit 1 if any class is CRITICAL
 artie run --json > metrics.json # machine-readable report
 ```
 
+### Gate on regressions only
+
+On an existing codebase, failing on every pre-existing issue is noisy. Save a baseline
+once, commit it, then fail the build only when a change makes design quality **worse**:
+
+```bash
+artie run --save-baseline       # once, then commit .artie-baseline.json
+artie run --baseline --fail-on=warning   # in CI: exit 1 only on new regressions
+```
+
+With `--baseline`, `--fail-on` applies to the regressions (defaulting to `WARNING` when
+omitted). A missing baseline file is a warning, not a failure, so first runs stay green.
+
 GitHub Actions example:
 
 ```yaml
-- name: Check design metrics
-  run: npx artie-lens run --fail-on=critical
+- name: Check for design regressions
+  run: npx artie-lens run --baseline --fail-on=warning
 ```
 
 ## Contributing

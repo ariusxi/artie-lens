@@ -2,12 +2,18 @@ import path from 'path'
 
 import { readFileContent } from './fileHelpers'
 import { ArtieConfig, MetricConfig, MetricInsights, MetricResult, RunOptions } from '../types/config.interface'
+import { DEFAULT_BASELINE } from './baselineHelpers'
 
 export function readConfig(): ArtieConfig {
   const filePath = path.resolve(process.cwd(), '.artierc.json')
   const config = readFileContent(filePath)
 
   return JSON.parse(config)
+}
+
+function flagValue(flag: string, fallback: string): string {
+  const value = flag.split('=').slice(1).join('=')
+  return value || fallback
 }
 
 export function parseRunOptions(flags: string[]): RunOptions {
@@ -18,6 +24,10 @@ export function parseRunOptions(flags: string[]): RunOptions {
       options.json = true
     } else if (flag.startsWith('--fail-on=')) {
       options.failOn = flag.split('=')[1]?.toUpperCase()
+    } else if (flag === '--save-baseline' || flag.startsWith('--save-baseline=')) {
+      options.saveBaseline = flagValue(flag, DEFAULT_BASELINE)
+    } else if (flag === '--baseline' || flag.startsWith('--baseline=')) {
+      options.baseline = flagValue(flag, DEFAULT_BASELINE)
     }
   }
 

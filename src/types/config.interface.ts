@@ -34,6 +34,8 @@ export interface ArtieConfig {
 export interface RunOptions {
   json?: boolean
   failOn?: string
+  baseline?: string
+  saveBaseline?: string
 }
 
 export interface MetricReport {
@@ -42,7 +44,17 @@ export interface MetricReport {
   classes: MetricResult[]
 }
 
+export interface Regression {
+  metric: string
+  value: string
+  from: string
+  to: string
+  fromTotal: number
+  toTotal: number
+}
+
 export interface RunReport {
   metrics: MetricReport[]
+  regressions?: Regression[]
   failed: boolean
 }

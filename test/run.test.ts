@@ -1,3 +1,5 @@
+import { existsSync, writeFileSync } from 'fs'
+import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { runLens } from '../src/routines/run.routine'
@@ -53,7 +55,7 @@ describe('runLens', () => {
 
     const report = await runLens(directory, { failOn: 'CRITICAL' })
 
-    expect(report.failed).toBe(false)
+    expect(report.failed).toBeFalsy()
   })
 
   it('never fails when --fail-on is not provided', async () => {
@@ -62,7 +64,7 @@ describe('runLens', () => {
 
     const report = await runLens(directory)
 
-    expect(report.failed).toBe(false)
+    expect(report.failed).toBeFalsy()
   })
 
   it('emits parseable JSON carrying the report and failed flag', async () => {
@@ -74,8 +76,57 @@ describe('runLens', () => {
     const output = logSpy.mock.calls.map(([ call ]) => call).join('\n')
     const parsed = JSON.parse(output)
 
-    expect(report.failed).toBe(true)
-    expect(parsed.failed).toBe(true)
+    expect(report.failed).toBeTruthy()
+    expect(parsed.failed).toBeTruthy()
     expect(parsed.metrics[0].classes).toHaveLength(2)
+  })
+})
+
+describe('runLens baseline', () => {
+  it('saves a baseline file without failing', async () => {
+    const directory = createProject({ '.artierc.json': artierc, 'big.ts': critical })
+    process.chdir(directory)
+    const baselinePath = join(directory, 'baseline.json')
+
+    const report = await runLens(directory, { saveBaseline: baselinePath })
+
+    expect(report.failed).toBeFalsy()
+    expect(existsSync(baselinePath)).toBeTruthy()
+  })
+
+  it('flags a regression against a healthier baseline', async () => {
+    const directory = createProject({ '.artierc.json': artierc, 'big.ts': critical })
+    process.chdir(directory)
+    const baselinePath = join(directory, 'baseline.json')
+    const summary = { total: 0, max: 0, min: 0, average: '0', deviation: '0' }
+    writeFileSync(baselinePath, JSON.stringify({
+      metrics: [{ metric: 'wmc', summary, classes: [{ value: 'Big', total: 1, label: 'OK' }] }],
+    }))
+
+    const report = await runLens(directory, { baseline: baselinePath, failOn: 'WARNING' })
+
+    expect(report.failed).toBeTruthy()
+    expect(report.regressions?.some((item) => item.value === 'Big')).toBeTruthy()
+  })
+
+  it('reports no regressions when the baseline matches the current run', async () => {
+    const directory = createProject({ '.artierc.json': artierc, 'big.ts': critical })
+    process.chdir(directory)
+    const baselinePath = join(directory, 'baseline.json')
+
+    await runLens(directory, { saveBaseline: baselinePath })
+    const report = await runLens(directory, { baseline: baselinePath, failOn: 'WARNING' })
+
+    expect(report.failed).toBeFalsy()
+    expect(report.regressions).toHaveLength(0)
+  })
+
+  it('does not fail when the baseline file is missing', async () => {
+    const directory = createProject({ '.artierc.json': artierc, 'big.ts': critical })
+    process.chdir(directory)
+
+    const report = await runLens(directory, { baseline: join(directory, 'nope.json'), failOn: 'WARNING' })
+
+    expect(report.failed).toBeFalsy()
   })
 })

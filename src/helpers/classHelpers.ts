@@ -87,26 +87,84 @@ export function getCoupledClasses(classDeclaration: ClassDeclaration): Set<Class
   return coupled
 }
 
-export function getCohesionLength(classDeclaration: ClassDeclaration): number {
-  const methods = classDeclaration.getMethods()
-  const properties = classDeclaration
-    .getProperties()
-    .map((property) => property.getName())
+function isFunctionInitializer(node: Node | undefined): boolean {
+  return !!node && (Node.isArrowFunction(node) || Node.isFunctionExpression(node))
+}
 
+function getInstanceVariableNames(classDeclaration: ClassDeclaration): Set<string> {
+  const names = new Set<string>()
+
+  for (const property of classDeclaration.getProperties()) {
+    // Arrow-function/function fields are behavior, not data — they are treated as methods below
+    if (property.isStatic() || isFunctionInitializer(property.getInitializer())) continue
+    names.add(property.getName())
+  }
+
+  // Parameter properties (e.g. `constructor(private repo: Repo)`) are instance variables too
+  for (const constructor of classDeclaration.getConstructors()) {
+    for (const parameter of constructor.getParameters()) {
+      if (parameter.hasScopeKeyword() || parameter.isReadonly()) names.add(parameter.getName())
+    }
+  }
+
+  return names
+}
+
+function getCohesionMethods(classDeclaration: ClassDeclaration): Node[] {
+  const methods: Node[] = []
+
+  for (const method of classDeclaration.getMethods()) {
+    if (!method.isStatic() && !method.isOverload()) methods.push(method)
+  }
+  for (const accessor of [...classDeclaration.getGetAccessors(), ...classDeclaration.getSetAccessors()]) {
+    if (!accessor.isStatic()) methods.push(accessor)
+  }
+  for (const property of classDeclaration.getProperties()) {
+    if (!property.isStatic() && isFunctionInitializer(property.getInitializer())) {
+      methods.push(property.getInitializerOrThrow())
+    }
+  }
+
+  return methods
+}
+
+function getUsedInstanceVariables(method: Node, instanceVariables: Set<string>): Set<string> {
+  const used = new Set<string>()
+
+  for (const access of method.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)) {
+    if (access.getExpression().getKind() !== SyntaxKind.ThisKeyword) continue
+    const name = access.getName()
+    if (instanceVariables.has(name)) used.add(name)
+  }
+
+  for (const access of method.getDescendantsOfKind(SyntaxKind.ElementAccessExpression)) {
+    if (access.getExpression().getKind() !== SyntaxKind.ThisKeyword) continue
+    const argument = access.getArgumentExpression()
+    if (argument && Node.isStringLiteral(argument) && instanceVariables.has(argument.getLiteralValue())) {
+      used.add(argument.getLiteralValue())
+    }
+  }
+
+  return used
+}
+
+export function getCohesionLength(classDeclaration: ClassDeclaration): number {
+  const methods = getCohesionMethods(classDeclaration)
   if (methods.length < 2) return 0
 
-  const methodProperties = methods.map((method) => {
-    const body = method.getBodyText() ?? ''
-    return properties.filter((property) => body.includes(`this.${property}`))
-  })
+  const instanceVariables = getInstanceVariableNames(classDeclaration)
+  const usedPerMethod = methods.map((method) => getUsedInstanceVariables(method, instanceVariables))
+
+  // CK paper: if no method uses any instance variable, LCOM is 0
+  if (usedPerMethod.every((used) => used.size === 0)) return 0
 
   let shared = 0
   let unshared = 0
 
-  for (let i = 0; i < methodProperties.length; i++) {
-    for (let j = i + 1; j < methodProperties.length; j++) {
-      const intersection = methodProperties[i].filter((property) => methodProperties[j].includes(property))
-      if (intersection.length > 0) shared++
+  for (let i = 0; i < usedPerMethod.length; i++) {
+    for (let j = i + 1; j < usedPerMethod.length; j++) {
+      const intersects = [...usedPerMethod[i]].some((name) => usedPerMethod[j].has(name))
+      if (intersects) shared++
       else unshared++
     }
   }

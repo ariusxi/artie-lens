@@ -64,6 +64,7 @@
     "vitest": "^2.1.9"
   },
   "dependencies": {
+    "chokidar": "^4.0.3",
     "colorette": "^2.0.20",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.1",

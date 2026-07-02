@@ -176,6 +176,33 @@ console.log(results) // [{ total: 25, label: 'CRITICAL', value: 'UserService' },
 | `--fail-on=LEVEL` | Exit with code `1` if any class reaches `LEVEL` (`WARNING` or `CRITICAL`). Without it the command always exits `0`. |
 | `--save-baseline[=FILE]` | Save the current run as a baseline (default `.artie-baseline.json`) and exit `0`. |
 | `--baseline[=FILE]` | Compare the current run against a baseline and report only **regressions** (classes that crossed into a worse band, or new offending classes). |
+| `--watch` | Re-run on every file change. A development loop; ignores CI flags like `--fail-on`. |
+| `--suggest` | Print concrete refactoring suggestions instead of the report (see below). |
+
+## Suggestions
+
+`artie run --suggest` turns two metrics into concrete, deterministic refactoring advice
+(no code is changed):
+
+- **Circular dependencies** — lists the modules in each import cycle so you know exactly
+  what to break.
+- **Low cohesion** — for classes whose methods split into disjoint groups, it names each
+  group and the fields it shares, pointing at a clean split (SRP).
+
+```text
+🔧 Suggestions
+
+Circular dependencies (1):
+  cycle: src/b.ts → src/a.ts
+     Break it by extracting the shared code into a new module, or by depending
+     on an interface/type instead of the concrete module.
+
+Low cohesion (1):
+  class Mixed splits into 2 cohesive groups:
+     group 1: login, logout  (shares: user)
+     group 2: addItem, clearCart  (shares: cart)
+     Consider extracting each group into its own class (SRP).
+```
 
 ## Continuous integration
 

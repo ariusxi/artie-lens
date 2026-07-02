@@ -36,6 +36,8 @@ export interface RunOptions {
   failOn?: string
   baseline?: string
   saveBaseline?: string
+  watch?: boolean
+  suggest?: boolean
 }
 
 export interface MetricReport {

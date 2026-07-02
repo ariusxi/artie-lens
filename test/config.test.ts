@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { getEnableMetrics, getMetricIndexes, parseRunOptions } from '../src/helpers/configHelpers'
-import { getMetricLabel, severityRank } from '../src/helpers/metricHelpers'
+import { getEnableMetrics, getMetricIndexes, parseRunOptions } from '../src/helpers/config.helpers'
+import { getMetricLabel, severityRank } from '../src/helpers/metric.helpers'
 import { ArtieConfig, MetricResult } from '../src/types/config.interface'
 
 const result = (total: number): MetricResult => ({ total, label: 'OK', value: 'X' })
@@ -75,6 +75,11 @@ describe('parseRunOptions', () => {
 
   it('parses both flags together', () => {
     expect(parseRunOptions(['--json', '--fail-on=warning'])).toEqual({ json: true, failOn: 'WARNING' })
+  })
+
+  it('parses --watch and --suggest', () => {
+    expect(parseRunOptions(['--watch'])).toEqual({ watch: true })
+    expect(parseRunOptions(['--suggest'])).toEqual({ suggest: true })
   })
 
   it('ignores unknown flags and empty input', () => {

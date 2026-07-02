@@ -1,6 +1,6 @@
 import { Project } from 'ts-morph'
 
-export function buildModuleGraph(project: Project, includedPaths: Set<string>): Map<string, Set<string>> {
+export const buildModuleGraph = (project: Project, includedPaths: Set<string>): Map<string, Set<string>> => {
   const graph = new Map<string, Set<string>>()
 
   for (const sourceFile of project.getSourceFiles()) {
@@ -25,13 +25,13 @@ export function buildModuleGraph(project: Project, includedPaths: Set<string>): 
 }
 
 // Tarjan's strongly connected components: a node belongs to an import cycle when its
-// SCC has more than one member (or it imports itself). Returns the cycle size per node.
-export function findCycleSizes(graph: Map<string, Set<string>>): Map<string, number> {
+// SCC has more than one member (or it imports itself). Returns the cyclic groups.
+export const findCycleGroups = (graph: Map<string, Set<string>>): string[][] => {
   const indices = new Map<string, number>()
   const lowlinks = new Map<string, number>()
   const onStack = new Set<string>()
   const stack: string[] = []
-  const cycleSizes = new Map<string, number>()
+  const groups: string[][] = []
   let counter = 0
 
   const strongConnect = (node: string): void => {
@@ -45,9 +45,9 @@ export function findCycleSizes(graph: Map<string, Set<string>>): Map<string, num
       if (!indices.has(next)) {
         strongConnect(next)
         lowlinks.set(node, Math.min(lowlinks.get(node)!, lowlinks.get(next)!))
-      } else if (onStack.has(next)) {
-        lowlinks.set(node, Math.min(lowlinks.get(node)!, indices.get(next)!))
+        continue
       }
+      if (onStack.has(next)) lowlinks.set(node, Math.min(lowlinks.get(node)!, indices.get(next)!))
     }
 
     if (lowlinks.get(node) !== indices.get(node)) return
@@ -60,15 +60,21 @@ export function findCycleSizes(graph: Map<string, Set<string>>): Map<string, num
       component.push(member)
     } while (member !== node)
 
-    if (component.length > 1) {
-      for (const member of component) cycleSizes.set(member, component.length)
-    } else if (graph.get(node)?.has(node)) {
-      cycleSizes.set(node, 1)
-    }
+    if (component.length > 1 || graph.get(node)?.has(node)) groups.push(component)
   }
 
   for (const node of graph.keys()) {
     if (!indices.has(node)) strongConnect(node)
+  }
+
+  return groups
+}
+
+export const findCycleSizes = (graph: Map<string, Set<string>>): Map<string, number> => {
+  const cycleSizes = new Map<string, number>()
+
+  for (const group of findCycleGroups(graph)) {
+    for (const member of group) cycleSizes.set(member, group.length)
   }
 
   return cycleSizes

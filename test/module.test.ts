@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { findCycleSizes } from '../src/helpers/moduleHelpers'
+import { findCycleGroups, findCycleSizes } from '../src/helpers/module.helpers'
 
 const graph = (edges: Record<string, string[]>): Map<string, Set<string>> =>
   new Map(Object.entries(edges).map(([node, deps]) => [node, new Set(deps)]))
@@ -32,5 +32,14 @@ describe('findCycleSizes', () => {
     expect(sizes.get('a')).toBe(2)
     expect(sizes.get('c')).toBe(2)
     expect(sizes.has('e')).toBe(false)
+  })
+})
+
+describe('findCycleGroups', () => {
+  it('returns the members of each cycle', () => {
+    const groups = findCycleGroups(graph({ a: ['b'], b: ['c'], c: ['a'], d: [] }))
+
+    expect(groups).toHaveLength(1)
+    expect([...groups[0]].sort()).toEqual(['a', 'b', 'c'])
   })
 })

@@ -1,18 +1,18 @@
 import { CallExpression, ClassDeclaration, Node, SyntaxKind, Type } from 'ts-morph'
 
-function isExternalDeclaration(declaration: Node): boolean {
+const isExternalDeclaration = (declaration: Node): boolean => {
   const sourceFile = declaration.getSourceFile()
   return sourceFile.isInNodeModules() || sourceFile.isDeclarationFile()
 }
 
-function addCoupledClass(declaration: Node | undefined, self: ClassDeclaration, coupled: Set<ClassDeclaration>): void {
+const addCoupledClass = (declaration: Node | undefined, self: ClassDeclaration, coupled: Set<ClassDeclaration>): void => {
   if (!declaration || !Node.isClassDeclaration(declaration)) return
   if (declaration === self || isExternalDeclaration(declaration)) return
 
   coupled.add(declaration)
 }
 
-function addCoupledFromType(type: Type, self: ClassDeclaration, coupled: Set<ClassDeclaration>, seen = new Set<Type>()): void {
+const addCoupledFromType = (type: Type, self: ClassDeclaration, coupled: Set<ClassDeclaration>, seen = new Set<Type>()): void => {
   if (seen.has(type)) return
   seen.add(type)
 
@@ -31,7 +31,7 @@ function addCoupledFromType(type: Type, self: ClassDeclaration, coupled: Set<Cla
   }
 }
 
-function addCoupledFromUsage(node: Node, self: ClassDeclaration, coupled: Set<ClassDeclaration>): void {
+const addCoupledFromUsage = (node: Node, self: ClassDeclaration, coupled: Set<ClassDeclaration>): void => {
   const declaration = node.getSymbol()?.getDeclarations()[0]
   if (!declaration) return
 
@@ -39,7 +39,7 @@ function addCoupledFromUsage(node: Node, self: ClassDeclaration, coupled: Set<Cl
   addCoupledClass(owner ?? declaration, self, coupled)
 }
 
-export function getCoupledClasses(classDeclaration: ClassDeclaration): Set<ClassDeclaration> {
+export const getCoupledClasses = (classDeclaration: ClassDeclaration): Set<ClassDeclaration> => {
   const coupled = new Set<ClassDeclaration>()
 
   // Heritage coupling (extends / implements); interfaces resolve to non-class declarations and are ignored
@@ -86,11 +86,10 @@ export function getCoupledClasses(classDeclaration: ClassDeclaration): Set<Class
   return coupled
 }
 
-function isFunctionInitializer(node: Node | undefined): boolean {
-  return !!node && (Node.isArrowFunction(node) || Node.isFunctionExpression(node))
-}
+const isFunctionInitializer = (node: Node | undefined): boolean =>
+  !!node && (Node.isArrowFunction(node) || Node.isFunctionExpression(node))
 
-function getInstanceVariableNames(classDeclaration: ClassDeclaration): Set<string> {
+const getInstanceVariableNames = (classDeclaration: ClassDeclaration): Set<string> => {
   const names = new Set<string>()
 
   for (const property of classDeclaration.getProperties()) {
@@ -109,25 +108,7 @@ function getInstanceVariableNames(classDeclaration: ClassDeclaration): Set<strin
   return names
 }
 
-function getCohesionMethods(classDeclaration: ClassDeclaration): Node[] {
-  const methods: Node[] = []
-
-  for (const method of classDeclaration.getMethods()) {
-    if (!method.isStatic() && !method.isOverload()) methods.push(method)
-  }
-  for (const accessor of [...classDeclaration.getGetAccessors(), ...classDeclaration.getSetAccessors()]) {
-    if (!accessor.isStatic()) methods.push(accessor)
-  }
-  for (const property of classDeclaration.getProperties()) {
-    if (!property.isStatic() && isFunctionInitializer(property.getInitializer())) {
-      methods.push(property.getInitializerOrThrow())
-    }
-  }
-
-  return methods
-}
-
-function getUsedInstanceVariables(method: Node, instanceVariables: Set<string>): Set<string> {
+const getUsedInstanceVariables = (method: Node, instanceVariables: Set<string>): Set<string> => {
   const used = new Set<string>()
 
   for (const access of method.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)) {
@@ -147,12 +128,36 @@ function getUsedInstanceVariables(method: Node, instanceVariables: Set<string>):
   return used
 }
 
-export function getCohesionLength(classDeclaration: ClassDeclaration): number {
-  const methods = getCohesionMethods(classDeclaration)
-  if (methods.length < 2) return 0
+interface MethodUsage {
+  name: string
+  variables: Set<string>
+}
 
+const getMethodUsages = (classDeclaration: ClassDeclaration): MethodUsage[] => {
   const instanceVariables = getInstanceVariableNames(classDeclaration)
-  const usedPerMethod = methods.map((method) => getUsedInstanceVariables(method, instanceVariables))
+  const usages: MethodUsage[] = []
+
+  for (const method of classDeclaration.getMethods()) {
+    if (method.isStatic() || method.isOverload()) continue
+    usages.push({ name: method.getName(), variables: getUsedInstanceVariables(method, instanceVariables) })
+  }
+  for (const accessor of [...classDeclaration.getGetAccessors(), ...classDeclaration.getSetAccessors()]) {
+    if (accessor.isStatic()) continue
+    usages.push({ name: accessor.getName(), variables: getUsedInstanceVariables(accessor, instanceVariables) })
+  }
+  for (const property of classDeclaration.getProperties()) {
+    if (property.isStatic() || !isFunctionInitializer(property.getInitializer())) continue
+    usages.push({ name: property.getName(), variables: getUsedInstanceVariables(property.getInitializerOrThrow(), instanceVariables) })
+  }
+
+  return usages
+}
+
+export const getCohesionLength = (classDeclaration: ClassDeclaration): number => {
+  const usages = getMethodUsages(classDeclaration)
+  if (usages.length < 2) return 0
+
+  const usedPerMethod = usages.map((usage) => usage.variables)
 
   // CK paper: if no method uses any instance variable, LCOM is 0
   if (usedPerMethod.every((used) => used.size === 0)) return 0
@@ -163,12 +168,56 @@ export function getCohesionLength(classDeclaration: ClassDeclaration): number {
   for (let i = 0; i < usedPerMethod.length; i++) {
     for (let j = i + 1; j < usedPerMethod.length; j++) {
       const intersects = [...usedPerMethod[i]].some((name) => usedPerMethod[j].has(name))
-      if (intersects) shared++
-      else unshared++
+      if (intersects) {
+        shared += 1
+        continue
+      }
+      unshared += 1
     }
   }
 
   return Math.max(0, unshared - shared)
+}
+
+// Clusters methods that (transitively) share instance variables. More than one cluster
+// means the class mixes unrelated responsibilities and is a candidate for splitting.
+export const getCohesionGroups = (classDeclaration: ClassDeclaration): { methods: string[]; variables: string[] }[] => {
+  const usages = getMethodUsages(classDeclaration).filter((usage) => usage.variables.size > 0)
+  if (usages.length < 2) return []
+
+  const parent = usages.map((_, index) => index)
+  const find = (index: number): number => {
+    while (parent[index] !== index) {
+      parent[index] = parent[parent[index]]
+      index = parent[index]
+    }
+    return index
+  }
+  const union = (a: number, b: number): void => {
+    parent[find(a)] = find(b)
+  }
+
+  const firstUserOf = new Map<string, number>()
+  usages.forEach((usage, index) => {
+    for (const variable of usage.variables) {
+      if (firstUserOf.has(variable)) {
+        union(index, firstUserOf.get(variable)!)
+        continue
+      }
+      firstUserOf.set(variable, index)
+    }
+  })
+
+  const groups = new Map<number, { methods: string[]; variables: Set<string> }>()
+  usages.forEach((usage, index) => {
+    const root = find(index)
+    if (!groups.has(root)) groups.set(root, { methods: [], variables: new Set() })
+    const group = groups.get(root)!
+    group.methods.push(usage.name)
+    for (const variable of usage.variables) group.variables.add(variable)
+  })
+
+  return [...groups.values()].map((group) => ({ methods: group.methods, variables: [...group.variables] }))
 }
 
 const DECISION_KINDS = [
@@ -183,7 +232,13 @@ const DECISION_KINDS = [
   SyntaxKind.CatchClause,
 ]
 
-function getMethodComplexity(method: Node): number {
+const LOGICAL_OPERATORS = [
+  SyntaxKind.AmpersandAmpersandToken,
+  SyntaxKind.BarBarToken,
+  SyntaxKind.QuestionQuestionToken,
+]
+
+const getMethodComplexity = (method: Node): number => {
   let complexity = 1
 
   for (const kind of DECISION_KINDS) {
@@ -192,19 +247,13 @@ function getMethodComplexity(method: Node): number {
 
   for (const binary of method.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
     const operator = binary.getOperatorToken().getKind()
-    if (
-      operator === SyntaxKind.AmpersandAmpersandToken ||
-      operator === SyntaxKind.BarBarToken ||
-      operator === SyntaxKind.QuestionQuestionToken
-    ) {
-      complexity += 1
-    }
+    if (LOGICAL_OPERATORS.includes(operator)) complexity += 1
   }
 
   return complexity
 }
 
-export function getWeightedMethods(classDeclaration: ClassDeclaration): number {
+export const getWeightedMethods = (classDeclaration: ClassDeclaration): number => {
   const methods: Node[] = [
     ...classDeclaration.getConstructors(),
     ...classDeclaration.getMethods().filter((method) => !method.isOverload()),
@@ -213,15 +262,14 @@ export function getWeightedMethods(classDeclaration: ClassDeclaration): number {
   ]
 
   for (const property of classDeclaration.getProperties()) {
-    if (!property.isStatic() && isFunctionInitializer(property.getInitializer())) {
-      methods.push(property.getInitializerOrThrow())
-    }
+    if (property.isStatic() || !isFunctionInitializer(property.getInitializer())) continue
+    methods.push(property.getInitializerOrThrow())
   }
 
   return methods.reduce((total, method) => total + getMethodComplexity(method), 0)
 }
 
-export function getDepthOfInheritance(classDeclaration: ClassDeclaration): number {
+export const getDepthOfInheritance = (classDeclaration: ClassDeclaration): number => {
   let depth = 0
   let current = classDeclaration.getBaseClass()
 
@@ -233,19 +281,16 @@ export function getDepthOfInheritance(classDeclaration: ClassDeclaration): numbe
   return depth
 }
 
-export function getNumberOfChildren(classDeclaration: ClassDeclaration): number {
+export const getNumberOfChildren = (classDeclaration: ClassDeclaration): number =>
   // getDerivedClasses() returns all descendants; keep only immediate children
-  return classDeclaration
+  classDeclaration
     .getDerivedClasses()
     .filter((derived) => derived.getBaseClass() === classDeclaration)
     .length
-}
 
-function getOwnMemberKey(name: string, kindName: string): string {
-  return `own:${kindName}:${name}`
-}
+const getOwnMemberKey = (name: string, kindName: string): string => `own:${kindName}:${name}`
 
-function getCallResponseKey(call: CallExpression, classDeclaration: ClassDeclaration): string | undefined {
+const getCallResponseKey = (call: CallExpression, classDeclaration: ClassDeclaration): string | undefined => {
   const expression = call.getExpression()
   const declaration = expression.getSymbol()?.getDeclarations()[0]
 
@@ -263,7 +308,7 @@ function getCallResponseKey(call: CallExpression, classDeclaration: ClassDeclara
   return `${sourceFile.getFilePath()}:${declaration.getStart()}`
 }
 
-export function getResponseSetLength(classDeclaration: ClassDeclaration): number {
+export const getResponseSetLength = (classDeclaration: ClassDeclaration): number => {
   const responseSet = new Set<string>()
   const bodies: Node[] = [...classDeclaration.getConstructors()]
 
@@ -280,10 +325,9 @@ export function getResponseSetLength(classDeclaration: ClassDeclaration): number
 
   for (const property of classDeclaration.getProperties()) {
     const initializer = property.getInitializer()
-    if (initializer && (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer))) {
-      responseSet.add(getOwnMemberKey(property.getName(), property.getKindName()))
-      bodies.push(initializer)
-    }
+    if (!isFunctionInitializer(initializer)) continue
+    responseSet.add(getOwnMemberKey(property.getName(), property.getKindName()))
+    bodies.push(property.getInitializerOrThrow())
   }
 
   for (const body of bodies) {

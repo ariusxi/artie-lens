@@ -1,13 +1,27 @@
 import path from 'path'
 
 import { readFileContent } from './fileHelpers'
-import { ArtieConfig, MetricConfig, MetricInsights, MetricResult } from '../types/config.interface'
+import { ArtieConfig, MetricConfig, MetricInsights, MetricResult, RunOptions } from '../types/config.interface'
 
 export function readConfig(): ArtieConfig {
   const filePath = path.resolve(process.cwd(), '.artierc.json')
   const config = readFileContent(filePath)
 
   return JSON.parse(config)
+}
+
+export function parseRunOptions(flags: string[]): RunOptions {
+  const options: RunOptions = {}
+
+  for (const flag of flags) {
+    if (flag === '--json') {
+      options.json = true
+    } else if (flag.startsWith('--fail-on=')) {
+      options.failOn = flag.split('=')[1]?.toUpperCase()
+    }
+  }
+
+  return options
 }
 
 export function getEnableMetrics(config: ArtieConfig): string[] {

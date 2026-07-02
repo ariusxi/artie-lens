@@ -152,6 +152,30 @@ console.log(results) // [{ total: 25, label: 'CRITICAL', value: 'UserService' },
 | `artie run [dir]` | Analyze `dir` (default: current directory) using `.artierc.json`. |
 | `artie help` | List available commands. |
 
+### Options for `run`
+
+| Option | Description |
+| --- | --- |
+| `--json` | Print the full report as JSON (metrics, per-class summary, and a `failed` flag) instead of the colored output. |
+| `--fail-on=LEVEL` | Exit with code `1` if any class reaches `LEVEL` (`WARNING` or `CRITICAL`). Without it the command always exits `0`. |
+
+## Continuous integration
+
+Use `--fail-on` to gate a pipeline on design quality, and `--json` to feed the report
+into other tooling:
+
+```bash
+artie run --fail-on=critical    # exit 1 if any class is CRITICAL
+artie run --json > metrics.json # machine-readable report
+```
+
+GitHub Actions example:
+
+```yaml
+- name: Check design metrics
+  run: npx artie-lens run --fail-on=critical
+```
+
 ## Contributing
 
 Releases are automated with [semantic-release](https://semantic-release.gitbook.io/), so

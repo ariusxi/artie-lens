@@ -30,3 +30,19 @@ export interface ArtieConfig {
     metrics: Record<string, MetricConfig>
   }
 }
+
+export interface RunOptions {
+  json?: boolean
+  failOn?: string
+}
+
+export interface MetricReport {
+  metric: string
+  summary: MetricInsights
+  classes: MetricResult[]
+}
+
+export interface RunReport {
+  metrics: MetricReport[]
+  failed: boolean
+}

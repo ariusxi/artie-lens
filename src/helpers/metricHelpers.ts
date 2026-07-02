@@ -11,6 +11,12 @@ export function getMetricLabel(total: number, metricConfig: MetricConfig): strin
   return 'OK'
 }
 
+const SEVERITY_RANK: Record<string, number> = { OK: 1, WARNING: 2, CRITICAL: 3 }
+
+export function severityRank(label: string): number {
+  return SEVERITY_RANK[label?.toUpperCase()] ?? 0
+}
+
 export const metricInsights: Record<string, Record<string, string>> = {
   lcom: {
     OK: "Cohesion is healthy. Classes are focused.",

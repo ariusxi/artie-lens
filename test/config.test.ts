@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { getEnableMetrics, getMetricIndexes } from '../src/helpers/configHelpers'
-import { getMetricLabel } from '../src/helpers/metricHelpers'
+import { getEnableMetrics, getMetricIndexes, parseRunOptions } from '../src/helpers/configHelpers'
+import { getMetricLabel, severityRank } from '../src/helpers/metricHelpers'
 import { ArtieConfig, MetricResult } from '../src/types/config.interface'
 
 const result = (total: number): MetricResult => ({ total, label: 'OK', value: 'X' })
@@ -61,5 +61,37 @@ describe('getEnableMetrics', () => {
     } as ArtieConfig
 
     expect(getEnableMetrics(config)).toEqual(['wmc', 'rfc', 'lcom'])
+  })
+})
+
+describe('parseRunOptions', () => {
+  it('parses --json', () => {
+    expect(parseRunOptions(['--json'])).toEqual({ json: true })
+  })
+
+  it('parses --fail-on and uppercases the level', () => {
+    expect(parseRunOptions(['--fail-on=critical'])).toEqual({ failOn: 'CRITICAL' })
+  })
+
+  it('parses both flags together', () => {
+    expect(parseRunOptions(['--json', '--fail-on=warning'])).toEqual({ json: true, failOn: 'WARNING' })
+  })
+
+  it('ignores unknown flags and empty input', () => {
+    expect(parseRunOptions(['--foo'])).toEqual({})
+    expect(parseRunOptions([])).toEqual({})
+  })
+})
+
+describe('severityRank', () => {
+  it('orders the labels', () => {
+    expect(severityRank('OK')).toBe(1)
+    expect(severityRank('WARNING')).toBe(2)
+    expect(severityRank('CRITICAL')).toBe(3)
+  })
+
+  it('is case-insensitive and returns 0 for unknown labels', () => {
+    expect(severityRank('warning')).toBe(2)
+    expect(severityRank('nope')).toBe(0)
   })
 })

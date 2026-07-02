@@ -275,3 +275,17 @@ describe('CYCLIC (circular dependencies)', () => {
     expect(totalOf(results, 'z.ts')).toBe(0)
   })
 })
+
+describe('tsconfig path aliases', () => {
+  it('resolves imports through tsconfig paths so coupling is counted', async () => {
+    const directory = createProject({
+      'tsconfig.json': `{ "compilerOptions": { "baseUrl": ".", "paths": { "@/*": ["src/*"] } } }`,
+      'src/a.ts': `import { b } from '@/b'
+        export const a = () => b`,
+      'src/b.ts': `export const b = 1`,
+    })
+
+    const results = await run(calculateCE, directory)
+    expect(totalOf(results, 'src/a.ts')).toBe(1)
+  })
+})

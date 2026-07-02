@@ -1,8 +1,8 @@
 import { relative } from 'path'
-import { Project } from 'ts-morph'
 
 import { MetricConfig, MetricResult } from '../types/config.interface'
 import { getSourceFiles } from './fileHelpers'
+import { createAnalysisProject } from './projectHelpers'
 import { getCohesionLength, getCoupledClasses, getDepthOfInheritance, getNumberOfChildren, getResponseSetLength, getWeightedMethods } from './classHelpers'
 import { buildModuleGraph, findCycleSizes } from './moduleHelpers'
 
@@ -66,11 +66,10 @@ export async function calculateCBO(directory: string, metricConfig: MetricConfig
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
-  const project = new Project()
-  project.addSourceFilesAtPaths(files)
+  const { sourceFiles } = createAnalysisProject(directory, files)
 
   const items = []
-  for (const sourceFile of project.getSourceFiles()) {
+  for (const sourceFile of sourceFiles) {
     for (const classDeclaration of sourceFile.getClasses()) {
       const className = classDeclaration.getName() ?? '[UnnamedClass]'
       const total = getCoupledClasses(classDeclaration).size
@@ -87,11 +86,10 @@ export async function calculateRFC(directory: string, metricConfig: MetricConfig
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
-  const project = new Project()
-  project.addSourceFilesAtPaths(files)
+  const { sourceFiles } = createAnalysisProject(directory, files)
 
   const items = []
-  for (const sourceFile of project.getSourceFiles()) {
+  for (const sourceFile of sourceFiles) {
     for (const classDeclaration of sourceFile.getClasses()) {
       const className = classDeclaration.getName() ?? '[UnnamedClass]'
       const total = getResponseSetLength(classDeclaration)
@@ -108,11 +106,10 @@ export async function calculateLCOM(directory: string, metricConfig: MetricConfi
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
-  const project = new Project()
-  project.addSourceFilesAtPaths(files)
+  const { sourceFiles } = createAnalysisProject(directory, files)
 
   const items = []
-  for (const sourceFile of project.getSourceFiles()) {
+  for (const sourceFile of sourceFiles) {
     for (const classDeclaration of sourceFile.getClasses()) {
       const className = classDeclaration.getName() ?? '[UnnamedClass]'
       const total = getCohesionLength(classDeclaration)
@@ -129,11 +126,10 @@ export async function calculateWMC(directory: string, metricConfig: MetricConfig
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
-  const project = new Project()
-  project.addSourceFilesAtPaths(files)
+  const { sourceFiles } = createAnalysisProject(directory, files)
 
   const items = []
-  for (const sourceFile of project.getSourceFiles()) {
+  for (const sourceFile of sourceFiles) {
     for (const classDeclaration of sourceFile.getClasses()) {
       const className = classDeclaration.getName() ?? '[UnnamedClass]'
       const total = getWeightedMethods(classDeclaration)
@@ -150,11 +146,10 @@ export async function calculateDIT(directory: string, metricConfig: MetricConfig
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
-  const project = new Project()
-  project.addSourceFilesAtPaths(files)
+  const { sourceFiles } = createAnalysisProject(directory, files)
 
   const items = []
-  for (const sourceFile of project.getSourceFiles()) {
+  for (const sourceFile of sourceFiles) {
     for (const classDeclaration of sourceFile.getClasses()) {
       const className = classDeclaration.getName() ?? '[UnnamedClass]'
       const total = getDepthOfInheritance(classDeclaration)
@@ -171,11 +166,10 @@ export async function calculateNOC(directory: string, metricConfig: MetricConfig
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
-  const project = new Project()
-  project.addSourceFilesAtPaths(files)
+  const { sourceFiles } = createAnalysisProject(directory, files)
 
   const items = []
-  for (const sourceFile of project.getSourceFiles()) {
+  for (const sourceFile of sourceFiles) {
     for (const classDeclaration of sourceFile.getClasses()) {
       const className = classDeclaration.getName() ?? '[UnnamedClass]'
       const total = getNumberOfChildren(classDeclaration)
@@ -192,9 +186,8 @@ export async function calculateCE(directory: string, metricConfig: MetricConfig,
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
-  const project = new Project()
-  const added = project.addSourceFilesAtPaths(files)
-  const includedPaths = new Set(added.map((sourceFile) => sourceFile.getFilePath()))
+  const { project, sourceFiles } = createAnalysisProject(directory, files)
+  const includedPaths = new Set(sourceFiles.map((sourceFile) => sourceFile.getFilePath()))
   const graph = buildModuleGraph(project, includedPaths)
 
   const items = []
@@ -212,9 +205,8 @@ export async function calculateCyclic(directory: string, metricConfig: MetricCon
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
-  const project = new Project()
-  const added = project.addSourceFilesAtPaths(files)
-  const includedPaths = new Set(added.map((sourceFile) => sourceFile.getFilePath()))
+  const { project, sourceFiles } = createAnalysisProject(directory, files)
+  const includedPaths = new Set(sourceFiles.map((sourceFile) => sourceFile.getFilePath()))
   const graph = buildModuleGraph(project, includedPaths)
   const cycleSizes = findCycleSizes(graph)
 

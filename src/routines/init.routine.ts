@@ -1,13 +1,11 @@
 import path from 'path'
 import { existsSync, writeFileSync } from 'fs'
 
-import { configTemplate } from '../templates/config'
+import { configTemplate } from '../templates/config.template'
 
-export function initConfig(): void {
+export const initConfig = (): void => {
   const filePath = path.resolve(process.cwd(), '.artierc.json')
-  if (existsSync(filePath)) {
-    return console.log("⚠️  The file .artierc.json already exists on the current directory.")
-  }
+  if (existsSync(filePath)) return console.log('⚠️  The file .artierc.json already exists on the current directory.')
 
   const configContent = JSON.stringify(configTemplate, null, 2)
   writeFileSync(filePath, configContent)

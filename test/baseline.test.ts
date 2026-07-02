@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { computeRegressions } from '../src/helpers/baselineHelpers'
+import { computeRegressions } from '../src/helpers/baseline.helpers'
 import { MetricReport, MetricResult } from '../src/types/config.interface'
 
 const summary = { total: 0, max: 0, min: 0, average: '0', deviation: '0' }

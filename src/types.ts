@@ -1,5 +1,5 @@
 export * from './helpers'
 export * from './routines'
-export * from './templates/config'
+export * from './templates/config.template'
 export * from './types'
 export * from './index'

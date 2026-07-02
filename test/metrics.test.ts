@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { calculateCBO, calculateCE, calculateCyclic, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC } from '../src/helpers/metricHelpers'
+import { calculateCBO, calculateCE, calculateCyclic, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC } from '../src/helpers/metric.helpers'
 import { cleanupProjects, createProject, thresholds, totalOf } from './utils'
 
 const run = (fn: typeof calculateWMC, directory: string) => fn(directory, thresholds, ['**/*.ts'], [])

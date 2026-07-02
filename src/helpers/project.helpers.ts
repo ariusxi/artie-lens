@@ -1,10 +1,10 @@
 import { Project, SourceFile } from 'ts-morph'
 
-import { findTsConfig } from './fileHelpers'
+import { findTsConfig } from './file.helpers'
 
 // Loads the project's tsconfig (when present) so path aliases and compiler options are
 // honored during resolution, while restricting analysis to the globbed files only.
-export function createAnalysisProject(directory: string, files: string[]): { project: Project; sourceFiles: SourceFile[] } {
+export const createAnalysisProject = (directory: string, files: string[]): { project: Project; sourceFiles: SourceFile[] } => {
   const tsConfigFilePath = findTsConfig(directory)
 
   const project = tsConfigFilePath

@@ -1,22 +1,23 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 
 import { MetricReport, Regression } from '../types/config.interface'
-import { severityRank } from './metricHelpers'
+
+import { severityRank } from './metric.helpers'
 
 export const DEFAULT_BASELINE = '.artie-baseline.json'
 
-export function writeBaseline(path: string, metrics: MetricReport[]): void {
+export const writeBaseline = (path: string, metrics: MetricReport[]): void => {
   writeFileSync(path, JSON.stringify({ metrics }, null, 2))
 }
 
-export function readBaseline(path: string): MetricReport[] | null {
+export const readBaseline = (path: string): MetricReport[] | null => {
   if (!existsSync(path)) return null
 
   const content = JSON.parse(readFileSync(path, 'utf-8'))
   return content.metrics ?? []
 }
 
-export function computeRegressions(baseline: MetricReport[], current: MetricReport[]): Regression[] {
+export const computeRegressions = (baseline: MetricReport[], current: MetricReport[]): Regression[] => {
   const regressions: Regression[] = []
 
   const baselineIndex = new Map(
@@ -32,16 +33,17 @@ export function computeRegressions(baseline: MetricReport[], current: MetricRepo
       const beforeSeverity = before ? severityRank(before.label) : severityRank('OK')
       const afterSeverity = severityRank(item.label)
 
-      if (afterSeverity > beforeSeverity && afterSeverity >= severityRank('WARNING')) {
-        regressions.push({
-          metric: report.metric,
-          value: item.value,
-          from: before ? before.label : 'NEW',
-          to: item.label,
-          fromTotal: before ? before.total : 0,
-          toTotal: item.total,
-        })
-      }
+      const isRegression = afterSeverity > beforeSeverity && afterSeverity >= severityRank('WARNING')
+      if (!isRegression) continue
+
+      regressions.push({
+        metric: report.metric,
+        value: item.value,
+        from: before ? before.label : 'NEW',
+        to: item.label,
+        fromTotal: before ? before.total : 0,
+        toTotal: item.total,
+      })
     }
   }
 

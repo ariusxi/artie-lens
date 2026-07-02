@@ -1,7 +1,7 @@
 {
   "name": "artie-lens",
   "version": "1.4.0",
-  "description": "AST-based CK design metrics (WMC, DIT, NOC, CBO, RFC, LCOM) for TypeScript projects",
+  "description": "AST-based design metrics for TypeScript: CK class metrics (WMC, DIT, NOC, CBO, RFC, LCOM) plus module coupling and circular-dependency detection",
   "main": "artie-lens.js",
   "types": "artie-lens.d.ts",
   "author": "Alef Felix",
@@ -67,7 +67,6 @@
     "colorette": "^2.0.20",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.1",
-    "madge": "^8.0.0",
     "ts-morph": "^26.0.0",
     "typescript": "^5.9.2"
   }

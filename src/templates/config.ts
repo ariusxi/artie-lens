@@ -33,6 +33,16 @@ export const configTemplate = {
         enabled: true,
         warning: 10,
         critical: 20
+      },
+      ce: {
+        enabled: true,
+        warning: 8,
+        critical: 15
+      },
+      cyclic: {
+        enabled: true,
+        warning: 1,
+        critical: 1
       }
     }
   },

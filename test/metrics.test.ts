@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { calculateCBO, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC } from '../src/helpers/metricHelpers'
+import { calculateCBO, calculateCE, calculateCyclic, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC } from '../src/helpers/metricHelpers'
 import { cleanupProjects, createProject, thresholds, totalOf } from './utils'
 
 const run = (fn: typeof calculateWMC, directory: string) => fn(directory, thresholds, ['**/*.ts'], [])
@@ -238,5 +238,40 @@ describe('NOC (Number of Children)', () => {
     expect(totalOf(results, 'ChildA')).toBe(1)
     expect(totalOf(results, 'ChildB')).toBe(0)
     expect(totalOf(results, 'GrandChild')).toBe(0)
+  })
+})
+
+describe('CE (Efferent Coupling per module)', () => {
+  it('counts the distinct project modules a file imports', async () => {
+    const directory = createProject({
+      'a.ts': `import { b } from './b'
+        import { c } from './c'
+        export const a = () => b + c`,
+      'b.ts': `import { c } from './c'
+        export const b = c`,
+      'c.ts': `export const c = 1`,
+    })
+
+    const results = await run(calculateCE, directory)
+    expect(totalOf(results, 'a.ts')).toBe(2)
+    expect(totalOf(results, 'b.ts')).toBe(1)
+    expect(totalOf(results, 'c.ts')).toBe(0)
+  })
+})
+
+describe('CYCLIC (circular dependencies)', () => {
+  it('flags modules in an import cycle and leaves the rest at zero', async () => {
+    const directory = createProject({
+      'x.ts': `import { y } from './y'
+        export const x = () => y`,
+      'y.ts': `import { x } from './x'
+        export const y = () => x`,
+      'z.ts': `export const z = 1`,
+    })
+
+    const results = await run(calculateCyclic, directory)
+    expect(totalOf(results, 'x.ts')).toBe(2)
+    expect(totalOf(results, 'y.ts')).toBe(2)
+    expect(totalOf(results, 'z.ts')).toBe(0)
   })
 })

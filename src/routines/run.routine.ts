@@ -1,6 +1,6 @@
 import { printMetric } from '../helpers/printHelpers'
 import { MetricConfig, MetricInsights, MetricReport, MetricResult, Regression, RunOptions, RunReport } from '../types/config.interface'
-import { calculateCBO, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC, metricInsights, severityRank } from '../helpers/metricHelpers'
+import { calculateCBO, calculateCE, calculateCyclic, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC, metricInsights, severityRank } from '../helpers/metricHelpers'
 import { getEnableMetrics, getMetricConfig, getMetricIndexes, readConfig } from '../helpers/configHelpers'
 import { computeRegressions, readBaseline, writeBaseline } from '../helpers/baselineHelpers'
 
@@ -18,6 +18,8 @@ const metricsMap: Record<string, MetricFunction> = {
   wmc: calculateWMC,
   dit: calculateDIT,
   noc: calculateNOC,
+  ce: calculateCE,
+  cyclic: calculateCyclic,
 }
 
 function printMetricSummary(metric: string, indexes: MetricInsights) {

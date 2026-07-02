@@ -1,5 +1,5 @@
 export function showHelp() {
-  console.log('Artie-Lens: CK design metrics (WMC, DIT, NOC, CBO, RFC, LCOM) for TypeScript\n')
+  console.log('Artie-Lens: design metrics for TypeScript (CK class metrics + module coupling and cycles)\n')
   console.log('Usage: artie <command> [directory] [options]\n')
   console.log('Commands:')
   console.log('  init             Create a .artierc.json file with default settings')

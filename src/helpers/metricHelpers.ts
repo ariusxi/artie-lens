@@ -1,8 +1,10 @@
+import { relative } from 'path'
 import { Project } from 'ts-morph'
 
 import { MetricConfig, MetricResult } from '../types/config.interface'
 import { getSourceFiles } from './fileHelpers'
 import { getCohesionLength, getCoupledClasses, getDepthOfInheritance, getNumberOfChildren, getResponseSetLength, getWeightedMethods } from './classHelpers'
+import { buildModuleGraph, findCycleSizes } from './moduleHelpers'
 
 export function getMetricLabel(total: number, metricConfig: MetricConfig): string {
   if (total >= metricConfig.critical!) return 'CRITICAL'
@@ -47,6 +49,16 @@ export const metricInsights: Record<string, Record<string, string>> = {
     OK: "Number of direct subclasses is reasonable.",
     WARNING: "Many direct subclasses → make sure the base abstraction is right and thoroughly tested.",
     CRITICAL: "Very high number of children → possible misuse of subclassing or a leaky abstraction. Suggestion: reconsider the hierarchy."
+  },
+  ce: {
+    OK: "This module depends on few others.",
+    WARNING: "This module imports many others → it is fragile to upstream changes.",
+    CRITICAL: "This module is a coupling hub → changes ripple widely. Suggestion: extract stable abstractions or split it."
+  },
+  cyclic: {
+    OK: "No circular dependency.",
+    WARNING: "This module is part of an import cycle → harder to test and build.",
+    CRITICAL: "This module is part of an import cycle → hard to test, build, and reason about. Suggestion: break the cycle with an interface or a shared module."
   }
 }
 
@@ -171,6 +183,47 @@ export async function calculateNOC(directory: string, metricConfig: MetricConfig
 
       items.push({ total, label, value: className })
     }
+  }
+
+  return items
+}
+
+export async function calculateCE(directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]): Promise<MetricResult[]> {
+  const files = await getSourceFiles(directory, includes, excludes)
+  if (files.length === 0) return []
+
+  const project = new Project()
+  const added = project.addSourceFilesAtPaths(files)
+  const includedPaths = new Set(added.map((sourceFile) => sourceFile.getFilePath()))
+  const graph = buildModuleGraph(project, includedPaths)
+
+  const items = []
+  for (const [path, dependencies] of graph) {
+    const total = dependencies.size
+    const label = getMetricLabel(total, metricConfig)
+
+    items.push({ total, label, value: relative(directory, path) })
+  }
+
+  return items
+}
+
+export async function calculateCyclic(directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]): Promise<MetricResult[]> {
+  const files = await getSourceFiles(directory, includes, excludes)
+  if (files.length === 0) return []
+
+  const project = new Project()
+  const added = project.addSourceFilesAtPaths(files)
+  const includedPaths = new Set(added.map((sourceFile) => sourceFile.getFilePath()))
+  const graph = buildModuleGraph(project, includedPaths)
+  const cycleSizes = findCycleSizes(graph)
+
+  const items = []
+  for (const path of graph.keys()) {
+    const total = cycleSizes.get(path) ?? 0
+    const label = getMetricLabel(total, metricConfig)
+
+    items.push({ total, label, value: relative(directory, path) })
   }
 
   return items

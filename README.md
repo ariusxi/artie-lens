@@ -41,9 +41,10 @@ artie help          # list available commands
 
 ## The metrics
 
-All metrics are measured **per class** and follow the definitions in
-_A Metrics Suite for Object Oriented Design_ (Chidamber & Kemerer, IEEE TSE, 1994).
-Higher values mean higher complexity/risk.
+### Class metrics (CK suite)
+
+Measured **per class**, following _A Metrics Suite for Object Oriented Design_
+(Chidamber & Kemerer, IEEE TSE, 1994). Higher values mean higher complexity/risk.
 
 | Metric | Name | What it measures | High value suggests |
 | --- | --- | --- | --- |
@@ -53,6 +54,16 @@ Higher values mean higher complexity/risk.
 | **CBO** | Coupling Between Object classes | Number of **other classes** this class depends on — via heritage, parameter/property/return types, and usages inside method bodies (`new`, calls, member access). | Fragile design; changes elsewhere ripple in. |
 | **RFC** | Response For a Class | Size of the response set: the class's own methods **plus** the first-level methods they call. | Testing/debugging is harder (many methods can run per message). |
 | **LCOM** | Lack of Cohesion in Methods | Pairs of methods that share **no** instance variable, minus the pairs that do (floored at 0). `0` when methods are cohesive or use no instance state. | Class mixes unrelated responsibilities; consider splitting (SRP). |
+
+### Module metrics
+
+Measured **per module** (file), so they apply to any TypeScript, including functional code
+with no classes. Reported value is the module path.
+
+| Metric | Name | What it measures | High value suggests |
+| --- | --- | --- | --- |
+| **CE** | Efferent Coupling | Number of distinct project modules this file imports (via `import` and `export ... from`). | Module is fragile to upstream changes; a coupling hub. |
+| **CYCLIC** | Circular dependency | Size of the import cycle the module belongs to (`0` when acyclic). | Import cycle: hard to test, build, and reason about. |
 
 ### Scope & known limitations
 
@@ -67,6 +78,9 @@ Higher values mean higher complexity/risk.
 - **DIT** follows the `extends` chain and counts every ancestor class it can resolve,
   including external base classes when they are declared as classes in available typings.
 - **NOC** counts immediate subclasses found **within the analyzed project** only.
+- **CE** and **CYCLIC** resolve relative imports within the analyzed project. Path aliases
+  from `tsconfig` (e.g. `@/foo`) are not resolved yet, so imports through aliases are not
+  counted. External (`node_modules`) imports are ignored by design.
 
 ## Configuration
 
@@ -86,7 +100,9 @@ Higher values mean higher complexity/risk.
       "rfc": { "enabled": true, "warning": 15, "critical": 30 },
       "cbo": { "enabled": true },
       "dit": { "enabled": true, "warning": 4, "critical": 6 },
-      "noc": { "enabled": true, "warning": 10, "critical": 20 }
+      "noc": { "enabled": true, "warning": 10, "critical": 20 },
+      "ce": { "enabled": true, "warning": 8, "critical": 15 },
+      "cyclic": { "enabled": true, "warning": 1, "critical": 1 }
     }
   },
   "includes": ["**/*.ts", "!**/*.d.ts"],

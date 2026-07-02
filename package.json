@@ -44,15 +44,21 @@
     "service-autonomy"
   ],
   "scripts": {
-    "build": "rollup -c --bundleConfigAsCjs"
+    "build": "rollup -c --bundleConfigAsCjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.3.0",
     "@rollup/plugin-typescript": "^11.1.6",
     "rollup": "^4.21.1",
     "rollup-plugin-dts": "^6.1.1",
-    "tslib": "^2.7.0"
+    "semantic-release": "^24.2.3",
+    "tslib": "^2.7.0",
+    "vitest": "^2.1.9"
   },
   "dependencies": {
     "colorette": "^2.0.20",

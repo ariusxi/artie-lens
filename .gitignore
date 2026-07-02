@@ -1,7 +1,6 @@
 node_modules/
 dist/
 
-yarn.lock
 artie-lens.js
 artie-lens.js.map
 artie-lens.d.ts

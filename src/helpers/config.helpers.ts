@@ -35,8 +35,7 @@ export const parseRunOptions = (flags: string[]): RunOptions => {
 export const getEnableMetrics = (config: ArtieConfig): string[] =>
   Object.keys(config.options.metrics).filter((metric) => config.options.metrics[metric].enabled)
 
-export const getMetricConfig = (metricName: string): MetricConfig => {
-  const config = readConfig()
+export const resolveMetricConfig = (config: ArtieConfig, metricName: string): MetricConfig => {
   const defaults = config.options.defaultThresholds
   const metric = config.options.metrics[metricName.toLowerCase()]
 
@@ -50,6 +49,8 @@ export const getMetricConfig = (metricName: string): MetricConfig => {
     levels: metric.levels ?? defaults.levels,
   }
 }
+
+export const getMetricConfig = (metricName: string): MetricConfig => resolveMetricConfig(readConfig(), metricName)
 
 const EMPTY_INDEXES: MetricInsights = { total: 0, max: 0, min: 0, average: '0', deviation: '0' }
 

@@ -1,31 +1,18 @@
 import { watch } from 'chokidar'
 
-import { MetricConfig, MetricInsights, MetricReport, MetricResult, Regression, RunOptions, RunReport } from '../types/config.interface'
+import { MetricInsights, MetricReport, MetricResult, Regression, RunOptions, RunReport } from '../types/config.interface'
 import { printMetric } from '../helpers/print.helpers'
-import { calculateCBO, calculateCE, calculateCyclic, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC, metricInsights, severityRank } from '../helpers/metric.helpers'
-import { getEnableMetrics, getMetricConfig, getMetricIndexes, readConfig } from '../helpers/config.helpers'
+import { buildAnalysisContext, metricInsights, metricRegistry, severityRank } from '../helpers/metric.helpers'
+import { getEnableMetrics, getMetricIndexes, readConfig, resolveMetricConfig } from '../helpers/config.helpers'
 import { computeRegressions, readBaseline, writeBaseline } from '../helpers/baseline.helpers'
 import { suggestCohesion, suggestCycles } from '../helpers/suggest.helpers'
 
 const WATCH_DEBOUNCE_MS = 200
 
-type MetricFunction = (directory: string, config: MetricConfig, includes: string[], excludes: string[]) => Promise<MetricResult[]>
-
 interface MetricBlock {
   metric: string
   summary: MetricInsights
   visible: MetricResult[]
-}
-
-const metricsMap: Record<string, MetricFunction> = {
-  cbo: calculateCBO,
-  rfc: calculateRFC,
-  lcom: calculateLCOM,
-  wmc: calculateWMC,
-  dit: calculateDIT,
-  noc: calculateNOC,
-  ce: calculateCE,
-  cyclic: calculateCyclic,
 }
 
 const printMetricSummary = (metric: string, indexes: MetricInsights): void => {
@@ -64,17 +51,18 @@ const printRegressions = (regressions: Regression[], baselinePath: string): void
   }
 }
 
-const collectReport = async (directory: string, options: RunOptions): Promise<{ report: MetricReport[]; blocks: MetricBlock[]; worstSeverity: number }> => {
+const collectReport = async (directory: string): Promise<{ report: MetricReport[]; blocks: MetricBlock[]; worstSeverity: number }> => {
   const config = readConfig()
   const metrics = getEnableMetrics(config)
+  const context = await buildAnalysisContext(directory, config.includes!, config.excludes!)
 
   const report: MetricReport[] = []
   const blocks: MetricBlock[] = []
   let worstSeverity = 0
 
   for (const metric of metrics) {
-    const thresholds = getMetricConfig(metric)
-    const result = await metricsMap[metric](directory, thresholds, config.includes!, config.excludes!)
+    const thresholds = resolveMetricConfig(config, metric)
+    const result = context ? metricRegistry[metric](context, thresholds) : []
     const visible = result.filter((item) => thresholds.levels!.includes(item.label))
     const summary = getMetricIndexes(visible)
 
@@ -121,7 +109,7 @@ const runBaseline = (options: RunOptions, report: MetricReport[]): RunReport => 
 }
 
 export const runLens = async (directory = process.cwd(), options: RunOptions = {}): Promise<RunReport> => {
-  const { report, blocks, worstSeverity } = await collectReport(directory, options)
+  const { report, blocks, worstSeverity } = await collectReport(directory)
 
   if (options.saveBaseline) return saveBaseline(options, report)
   if (options.baseline) return runBaseline(options, report)

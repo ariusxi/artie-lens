@@ -1,5 +1,5 @@
 import { relative } from 'path'
-import { ClassDeclaration } from 'ts-morph'
+import { ClassDeclaration, SourceFile } from 'ts-morph'
 
 import { MetricConfig, MetricResult } from '../types/config.interface'
 
@@ -64,20 +64,35 @@ export const metricInsights: Record<string, Record<string, string>> = {
   },
 }
 
-type MetricCalculator = (directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]) => Promise<MetricResult[]>
+// Built once per run and shared across every metric, so the project is parsed a single
+// time instead of once per metric.
+export interface AnalysisContext {
+  directory: string
+  sourceFiles: SourceFile[]
+  graph: Map<string, Set<string>>
+}
+
+export const buildAnalysisContext = async (directory: string, includes: string[], excludes: string[]): Promise<AnalysisContext | null> => {
+  const files = await getSourceFiles(directory, includes, excludes)
+  if (files.length === 0) return null
+
+  const { project, sourceFiles } = createAnalysisProject(directory, files)
+  const includedPaths = new Set(sourceFiles.map((sourceFile) => sourceFile.getFilePath()))
+  const graph = buildModuleGraph(project, includedPaths)
+
+  return { directory, sourceFiles, graph }
+}
 
 type ClassMetric = (classDeclaration: ClassDeclaration) => number
 
 type ModuleTotals = (graph: Map<string, Set<string>>) => Map<string, number>
 
-const calculateClassMetric = (metric: ClassMetric): MetricCalculator => async (directory, metricConfig, includes, excludes) => {
-  const files = await getSourceFiles(directory, includes, excludes)
-  if (files.length === 0) return []
+type ContextMetric = (context: AnalysisContext, metricConfig: MetricConfig) => MetricResult[]
 
-  const { sourceFiles } = createAnalysisProject(directory, files)
+const classResults = (context: AnalysisContext, metric: ClassMetric, metricConfig: MetricConfig): MetricResult[] => {
   const items: MetricResult[] = []
 
-  for (const sourceFile of sourceFiles) {
+  for (const sourceFile of context.sourceFiles) {
     for (const classDeclaration of sourceFile.getClasses()) {
       const value = classDeclaration.getName() ?? UNNAMED_CLASS
       const total = metric(classDeclaration)
@@ -89,20 +104,14 @@ const calculateClassMetric = (metric: ClassMetric): MetricCalculator => async (d
   return items
 }
 
-const calculateModuleMetric = (totalsOf: ModuleTotals): MetricCalculator => async (directory, metricConfig, includes, excludes) => {
-  const files = await getSourceFiles(directory, includes, excludes)
-  if (files.length === 0) return []
-
-  const { project, sourceFiles } = createAnalysisProject(directory, files)
-  const includedPaths = new Set(sourceFiles.map((sourceFile) => sourceFile.getFilePath()))
-  const graph = buildModuleGraph(project, includedPaths)
-  const totals = totalsOf(graph)
+const moduleResults = (context: AnalysisContext, totalsOf: ModuleTotals, metricConfig: MetricConfig): MetricResult[] => {
+  const totals = totalsOf(context.graph)
   const items: MetricResult[] = []
 
-  for (const path of graph.keys()) {
+  for (const path of context.graph.keys()) {
     const total = totals.get(path) ?? 0
 
-    items.push({ total, label: getMetricLabel(total, metricConfig), value: relative(directory, path) })
+    items.push({ total, label: getMetricLabel(total, metricConfig), value: relative(context.directory, path) })
   }
 
   return items
@@ -110,12 +119,35 @@ const calculateModuleMetric = (totalsOf: ModuleTotals): MetricCalculator => asyn
 
 const efferentCoupling: ModuleTotals = (graph) => new Map([...graph].map(([path, dependencies]) => [path, dependencies.size]))
 
-export const calculateCBO = calculateClassMetric((classDeclaration) => getCoupledClasses(classDeclaration).size)
-export const calculateRFC = calculateClassMetric(getResponseSetLength)
-export const calculateLCOM = calculateClassMetric(getCohesionLength)
-export const calculateWMC = calculateClassMetric(getWeightedMethods)
-export const calculateDIT = calculateClassMetric(getDepthOfInheritance)
-export const calculateNOC = calculateClassMetric(getNumberOfChildren)
+const classMetric = (metric: ClassMetric): ContextMetric => (context, metricConfig) => classResults(context, metric, metricConfig)
 
-export const calculateCE = calculateModuleMetric(efferentCoupling)
-export const calculateCyclic = calculateModuleMetric(findCycleSizes)
+const moduleMetric = (totalsOf: ModuleTotals): ContextMetric => (context, metricConfig) => moduleResults(context, totalsOf, metricConfig)
+
+export const metricRegistry: Record<string, ContextMetric> = {
+  cbo: classMetric((classDeclaration) => getCoupledClasses(classDeclaration).size),
+  rfc: classMetric(getResponseSetLength),
+  lcom: classMetric(getCohesionLength),
+  wmc: classMetric(getWeightedMethods),
+  dit: classMetric(getDepthOfInheritance),
+  noc: classMetric(getNumberOfChildren),
+  ce: moduleMetric(efferentCoupling),
+  cyclic: moduleMetric(findCycleSizes),
+}
+
+type MetricCalculator = (directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]) => Promise<MetricResult[]>
+
+const asCalculator = (metric: ContextMetric): MetricCalculator => async (directory, metricConfig, includes, excludes) => {
+  const context = await buildAnalysisContext(directory, includes, excludes)
+  if (!context) return []
+
+  return metric(context, metricConfig)
+}
+
+export const calculateCBO = asCalculator(metricRegistry.cbo)
+export const calculateRFC = asCalculator(metricRegistry.rfc)
+export const calculateLCOM = asCalculator(metricRegistry.lcom)
+export const calculateWMC = asCalculator(metricRegistry.wmc)
+export const calculateDIT = asCalculator(metricRegistry.dit)
+export const calculateNOC = asCalculator(metricRegistry.noc)
+export const calculateCE = asCalculator(metricRegistry.ce)
+export const calculateCyclic = asCalculator(metricRegistry.cyclic)

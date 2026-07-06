@@ -52,22 +52,20 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.6",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.3.0",
-    "@rollup/plugin-typescript": "^11.1.6",
     "rollup": "^4.21.1",
     "rollup-plugin-dts": "^6.1.1",
-    "semantic-release": "^24.2.3",
+    "semantic-release": "^24",
     "tslib": "^2.7.0",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "chokidar": "^4.0.3",
     "colorette": "^2.0.20",
     "fast-glob": "^3.3.3",
-    "fs-extra": "^11.3.1",
     "ts-morph": "^26.0.0",
     "typescript": "^5.9.2"
   }

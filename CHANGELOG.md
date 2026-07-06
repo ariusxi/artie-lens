@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/ariusxi/artie-lens/compare/v1.7.0...v1.7.1) (2026-07-06)
+
+
+### Performance Improvements
+
+* build one shared ts-morph project per run instead of one per metric ([8c050ea](https://github.com/ariusxi/artie-lens/commit/8c050ea5398c68255d6ccf03a21927baffa1914b))
+
 # [1.7.0](https://github.com/ariusxi/artie-lens/compare/v1.6.0...v1.7.0) (2026-07-02)
 
 

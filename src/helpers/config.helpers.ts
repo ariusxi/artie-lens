@@ -24,6 +24,8 @@ export const parseRunOptions = (flags: string[]): RunOptions => {
     if (flag === '--json') { options.json = true; continue }
     if (flag === '--watch') { options.watch = true; continue }
     if (flag === '--suggest') { options.suggest = true; continue }
+    if (flag === '--hotspots') { options.hotspots = true; continue }
+    if (flag.startsWith('--since=')) { options.since = flag.split('=').slice(1).join('='); continue }
     if (flag.startsWith('--fail-on=')) { options.failOn = flag.split('=')[1]?.toUpperCase(); continue }
     if (flag === '--save-baseline' || flag.startsWith('--save-baseline=')) { options.saveBaseline = flagValue(flag, DEFAULT_BASELINE); continue }
     if (flag === '--baseline' || flag.startsWith('--baseline=')) { options.baseline = flagValue(flag, DEFAULT_BASELINE) }

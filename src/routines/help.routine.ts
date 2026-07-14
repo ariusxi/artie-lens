@@ -15,6 +15,8 @@ const HELP_LINES = [
   '  --baseline[=FILE]      Compare against a baseline and report only regressions',
   '  --watch                Re-run on file changes (development loop)',
   '  --suggest              Print concrete refactoring suggestions (cycles and low cohesion)',
+  '  --hotspots             Rank files that are both unhealthy and frequently changed (needs git)',
+  '  --since=EXPR           Churn window for --hotspots (default "90 days ago")',
 ]
 
 export const showHelp = (): void => {

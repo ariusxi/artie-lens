@@ -178,6 +178,8 @@ console.log(results) // [{ total: 25, label: 'CRITICAL', value: 'UserService' },
 | `--baseline[=FILE]` | Compare the current run against a baseline and report only **regressions** (classes that crossed into a worse band, or new offending classes). |
 | `--watch` | Re-run on every file change. A development loop; ignores CI flags like `--fail-on`. |
 | `--suggest` | Print concrete refactoring suggestions instead of the report (see below). |
+| `--hotspots` | Rank files that are **both** structurally unhealthy and frequently changed (see below). Requires a git repository. |
+| `--since=EXPR` | Churn window used by `--hotspots`. Any git date expression, default `"90 days ago"`. |
 
 ## Suggestions
 
@@ -203,6 +205,29 @@ Low cohesion (1):
      group 2: addItem, clearCart  (shares: cart)
      Consider extracting each group into its own class (SRP).
 ```
+
+## Hotspots
+
+A bad class nobody touches is not urgent. A bad class that changes every week is a fire.
+`artie run --hotspots` crosses the metrics with **git churn** (how many commits touched each
+file in the window) so you know where to start:
+
+```
+score = churn × badness        badness: OK = 0, WARNING = 1, CRITICAL = 3 (summed per file)
+```
+
+```text
+🔥 Hotspots (structural issues in files actually being changed, since 90 days ago)
+
+[score 30] src/order-service.ts  (10 changes × badness 3)
+     WMC CRITICAL OrderService (31)
+
+[score 3] src/legacy-report.ts  (1 changes × badness 3)
+     WMC CRITICAL LegacyReport (30)
+```
+
+Healthy files never rank, however often they change. Unhealthy files that nobody touches
+rank low. Use `--since` to widen or narrow the window, and `--json` for the raw ranking.
 
 ## Continuous integration
 

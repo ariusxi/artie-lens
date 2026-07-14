@@ -12,6 +12,15 @@ export interface MetricResult {
   total: number
   label: string
   value: string
+  file?: string
+}
+
+export interface Hotspot {
+  file: string
+  churn: number
+  badness: number
+  score: number
+  findings: string[]
 }
 
 export interface MetricInsights {
@@ -38,6 +47,8 @@ export interface RunOptions {
   saveBaseline?: string
   watch?: boolean
   suggest?: boolean
+  hotspots?: boolean
+  since?: string
 }
 
 export interface MetricReport {

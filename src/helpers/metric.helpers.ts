@@ -93,11 +93,13 @@ const classResults = (context: AnalysisContext, metric: ClassMetric, metricConfi
   const items: MetricResult[] = []
 
   for (const sourceFile of context.sourceFiles) {
+    const file = relative(context.directory, sourceFile.getFilePath())
+
     for (const classDeclaration of sourceFile.getClasses()) {
       const value = classDeclaration.getName() ?? UNNAMED_CLASS
       const total = metric(classDeclaration)
 
-      items.push({ total, label: getMetricLabel(total, metricConfig), value })
+      items.push({ total, label: getMetricLabel(total, metricConfig), value, file })
     }
   }
 
@@ -110,8 +112,9 @@ const moduleResults = (context: AnalysisContext, totalsOf: ModuleTotals, metricC
 
   for (const path of context.graph.keys()) {
     const total = totals.get(path) ?? 0
+    const file = relative(context.directory, path)
 
-    items.push({ total, label: getMetricLabel(total, metricConfig), value: relative(context.directory, path) })
+    items.push({ total, label: getMetricLabel(total, metricConfig), value: file, file })
   }
 
   return items

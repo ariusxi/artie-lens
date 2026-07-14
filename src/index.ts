@@ -2,11 +2,12 @@ import { RunOptions } from './types/config.interface'
 import { parseRunOptions } from './helpers/config.helpers'
 import { initConfig } from './routines/init.routine'
 import { showHelp } from './routines/help.routine'
-import { runLens, suggestLens, watchLens } from './routines/run.routine'
+import { hotspotLens, runLens, suggestLens, watchLens } from './routines/run.routine'
 
 const runCommand = async (directory: string | undefined, options: RunOptions): Promise<void> => {
   if (options.watch) return watchLens(directory, options)
   if (options.suggest) return suggestLens(directory)
+  if (options.hotspots) return hotspotLens(directory, options)
 
   const report = await runLens(directory, options)
   if (!report.failed) return

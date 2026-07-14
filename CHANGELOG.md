@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/ariusxi/artie-lens/compare/v1.8.0...v1.9.0) (2026-07-14)
+
+
+### Features
+
+* enforce declarative architecture rules from the import graph ([c640ba4](https://github.com/ariusxi/artie-lens/commit/c640ba4398f6e429c2d62cb2facd399ff310bc7a))
+
 # [1.8.0](https://github.com/ariusxi/artie-lens/compare/v1.7.1...v1.8.0) (2026-07-14)
 
 

@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/ariusxi/artie-lens/compare/v1.7.1...v1.8.0) (2026-07-14)
+
+
+### Features
+
+* add --hotspots ranking files by structural badness times git churn ([4c0cace](https://github.com/ariusxi/artie-lens/commit/4c0cace3acec6772444cd91549afb02dc94c7eed))
+
 ## [1.7.1](https://github.com/ariusxi/artie-lens/compare/v1.7.0...v1.7.1) (2026-07-06)
 
 

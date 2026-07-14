@@ -206,6 +206,43 @@ Low cohesion (1):
      Consider extracting each group into its own class (SRP).
 ```
 
+## Architecture rules
+
+Metrics are heuristics with thresholds. Architecture rules are **contracts you write**, so a
+violation always fails the run (exit `1`), with or without `--fail-on`. Declare them under
+`rules` in `.artierc.json`:
+
+```json
+{
+  "rules": [
+    {
+      "from": "src/domain/**",
+      "cannotImport": ["src/infra/**"],
+      "message": "domain must not depend on infra"
+    },
+    {
+      "from": "src/modules/billing/**",
+      "canOnlyImport": ["src/modules/billing/**", "src/shared/**"]
+    }
+  ]
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `from` | Glob (or list) of the modules the rule applies to. |
+| `cannotImport` | Glob (or list) of forbidden targets. |
+| `canOnlyImport` | Allowlist: anything outside it is a violation. |
+| `message` | Optional custom message shown on violation. |
+
+```text
+✖ 1 architecture violation(s):
+  src/domain/user.ts → src/infra/db.ts
+     domain must not depend on infra
+```
+
+Violations also appear in `--json`, so they compose with the CI gate.
+
 ## Hotspots
 
 A bad class nobody touches is not urgent. A bad class that changes every week is a fire.

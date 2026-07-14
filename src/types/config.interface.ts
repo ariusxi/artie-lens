@@ -31,9 +31,23 @@ export interface MetricInsights {
   deviation: string
 }
 
+export interface ArchitectureRule {
+  from: string | string[]
+  cannotImport?: string | string[]
+  canOnlyImport?: string | string[]
+  message?: string
+}
+
+export interface RuleViolation {
+  from: string
+  to: string
+  message: string
+}
+
 export interface ArtieConfig {
   includes?: string[]
   excludes?: string[]
+  rules?: ArchitectureRule[]
   options: {
     defaultThresholds: Thresholds
     metrics: Record<string, MetricConfig>
@@ -69,5 +83,6 @@ export interface Regression {
 export interface RunReport {
   metrics: MetricReport[]
   regressions?: Regression[]
+  violations?: RuleViolation[]
   failed: boolean
 }

@@ -1,6 +1,6 @@
 import { watch } from 'chokidar'
 
-import { MetricInsights, MetricReport, MetricResult, Regression, RunOptions, RunReport } from '../types/config.interface'
+import { MetricInsights, MetricReport, MetricResult, Regression, RuleViolation, RunOptions, RunReport } from '../types/config.interface'
 import { printMetric } from '../helpers/print.helpers'
 import { buildAnalysisContext, metricInsights, metricRegistry, severityRank } from '../helpers/metric.helpers'
 import { getEnableMetrics, getMetricIndexes, readConfig, resolveMetricConfig } from '../helpers/config.helpers'
@@ -8,6 +8,7 @@ import { computeRegressions, readBaseline, writeBaseline } from '../helpers/base
 import { suggestCohesion, suggestCycles } from '../helpers/suggest.helpers'
 import { DEFAULT_SINCE, getChurn } from '../helpers/git.helpers'
 import { computeHotspots, HOTSPOT_LIMIT } from '../helpers/hotspot.helpers'
+import { checkRules } from '../helpers/rule.helpers'
 
 const WATCH_DEBOUNCE_MS = 200
 
@@ -53,7 +54,7 @@ const printRegressions = (regressions: Regression[], baselinePath: string): void
   }
 }
 
-const collectReport = async (directory: string): Promise<{ report: MetricReport[]; blocks: MetricBlock[]; worstSeverity: number }> => {
+const collectReport = async (directory: string): Promise<{ report: MetricReport[]; blocks: MetricBlock[]; worstSeverity: number; violations: RuleViolation[] }> => {
   const config = readConfig()
   const metrics = getEnableMetrics(config)
   const context = await buildAnalysisContext(directory, config.includes!, config.excludes!)
@@ -73,7 +74,19 @@ const collectReport = async (directory: string): Promise<{ report: MetricReport[
     for (const item of result) worstSeverity = Math.max(worstSeverity, severityRank(item.label))
   }
 
-  return { report, blocks, worstSeverity }
+  const violations = context && config.rules ? checkRules(context.graph, directory, config.rules) : []
+
+  return { report, blocks, worstSeverity, violations }
+}
+
+const printViolations = (violations: RuleViolation[]): void => {
+  if (!violations.length) return
+
+  console.log(`\n✖ ${violations.length} architecture violation(s):`)
+  for (const violation of violations) {
+    printMetric(`  ${violation.from} → ${violation.to}`, 'CRITICAL')
+    console.log(`     ${violation.message}`)
+  }
 }
 
 const saveBaseline = (options: RunOptions, report: MetricReport[]): RunReport => {
@@ -89,17 +102,18 @@ const saveBaseline = (options: RunOptions, report: MetricReport[]): RunReport =>
   return result
 }
 
-const runBaseline = (options: RunOptions, report: MetricReport[]): RunReport => {
+const runBaseline = (options: RunOptions, report: MetricReport[], violations: RuleViolation[]): RunReport => {
   const baseline = readBaseline(options.baseline!)
   if (!baseline) {
     if (!options.json) console.log(`⚠️  Baseline not found (${options.baseline}). Create one with: artie run --save-baseline`)
-    return { metrics: report, regressions: [], failed: false }
+    return { metrics: report, regressions: [], violations, failed: violations.length > 0 }
   }
 
   const regressions = computeRegressions(baseline, report)
   const gate = options.failOn ? severityRank(options.failOn) : severityRank('WARNING')
-  const failed = regressions.some((item) => severityRank(item.to) >= gate)
-  const result: RunReport = { metrics: report, regressions, failed }
+  const regressed = regressions.some((item) => severityRank(item.to) >= gate)
+  const failed = regressed || violations.length > 0
+  const result: RunReport = { metrics: report, regressions, violations, failed }
 
   if (options.json) {
     console.log(JSON.stringify(result, null, 2))
@@ -107,18 +121,20 @@ const runBaseline = (options: RunOptions, report: MetricReport[]): RunReport => 
   }
 
   printRegressions(regressions, options.baseline!)
+  printViolations(violations)
   return result
 }
 
 export const runLens = async (directory = process.cwd(), options: RunOptions = {}): Promise<RunReport> => {
-  const { report, blocks, worstSeverity } = await collectReport(directory)
+  const { report, blocks, worstSeverity, violations } = await collectReport(directory)
 
   if (options.saveBaseline) return saveBaseline(options, report)
-  if (options.baseline) return runBaseline(options, report)
+  if (options.baseline) return runBaseline(options, report, violations)
 
   const gate = options.failOn ? severityRank(options.failOn) : 0
-  const failed = gate > 0 && worstSeverity >= gate
-  const result: RunReport = { metrics: report, failed }
+  const metricFailed = gate > 0 && worstSeverity >= gate
+  const failed = metricFailed || violations.length > 0
+  const result: RunReport = { metrics: report, violations, failed }
 
   if (options.json) {
     console.log(JSON.stringify(result, null, 2))
@@ -129,7 +145,8 @@ export const runLens = async (directory = process.cwd(), options: RunOptions = {
     printMetricSummary(block.metric, block.summary)
     printMetricFiles(block.metric, block.visible)
   }
-  if (failed) console.log(`\n✖ Failing: found classes at or above ${options.failOn!.toUpperCase()}.`)
+  printViolations(violations)
+  if (metricFailed) console.log(`\n✖ Failing: found classes at or above ${options.failOn!.toUpperCase()}.`)
 
   return result
 }

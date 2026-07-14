@@ -46,6 +46,7 @@ export const configTemplate = {
       }
     }
   },
+  rules: [],
   includes: ['**/*.ts', '!**/*.d.ts'],
   excludes: [
     "**/*.test.ts",

@@ -2,7 +2,10 @@ import { RunOptions } from './types/config.interface'
 import { parseRunOptions } from './helpers/config.helpers'
 import { initConfig } from './routines/init.routine'
 import { showHelp } from './routines/help.routine'
-import { hotspotLens, runLens, suggestLens, watchLens } from './routines/run.routine'
+import { runLens } from './routines/run.routine'
+import { watchLens } from './routines/watch.routine'
+import { suggestLens } from './routines/suggest.routine'
+import { hotspotLens } from './routines/hotspots.routine'
 
 type Command = (directory: string | undefined, options: RunOptions) => void | Promise<void>
 

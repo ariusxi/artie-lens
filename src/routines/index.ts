@@ -1,3 +1,6 @@
 export * from './help.routine'
 export * from './init.routine'
 export * from './run.routine'
+export * from './watch.routine'
+export * from './suggest.routine'
+export * from './hotspots.routine'

@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/ariusxi/artie-lens/compare/v1.9.0...v1.10.0) (2026-07-15)
+
+
+### Features
+
+* add watch/suggest/hotspots subcommands and split docs into docs/ ([c209973](https://github.com/ariusxi/artie-lens/commit/c209973a4b46856ff2089b9c1ad468a436a93449))
+
 # [1.9.0](https://github.com/ariusxi/artie-lens/compare/v1.8.0...v1.9.0) (2026-07-14)
 
 

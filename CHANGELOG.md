@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/ariusxi/artie-lens/compare/v1.10.1...v1.11.0) (2026-07-15)
+
+
+### Features
+
+* show the cycle path in suggest and add ignoreReExports option ([13ea199](https://github.com/ariusxi/artie-lens/commit/13ea1995b5b8e64f2097f73ffd5844a04818b29e))
+
 ## [1.10.1](https://github.com/ariusxi/artie-lens/compare/v1.10.0...v1.10.1) (2026-07-15)
 
 

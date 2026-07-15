@@ -6,6 +6,7 @@ import { runLens } from './routines/run.routine'
 import { watchLens } from './routines/watch.routine'
 import { suggestLens } from './routines/suggest.routine'
 import { hotspotLens } from './routines/hotspots.routine'
+import { seamLens } from './routines/seams.routine'
 
 type Command = (directory: string | undefined, options: RunOptions) => void | Promise<void>
 
@@ -28,6 +29,7 @@ const commands: Record<string, Command> = {
   watch: (directory, options) => watchLens(directory, options),
   suggest: (directory) => suggestLens(directory),
   hotspots: (directory, options) => hotspotLens(directory, options),
+  seams: (directory, options) => seamLens(directory, options),
 }
 
 const main = async (args: string[]): Promise<void> => {

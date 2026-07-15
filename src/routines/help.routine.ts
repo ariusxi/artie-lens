@@ -9,6 +9,7 @@ const HELP_LINES = [
   '  watch [dir]       Re-run on every file change (development loop)',
   '  suggest [dir]     Print concrete refactoring suggestions (cycles, low cohesion)',
   '  hotspots [dir]    Rank files that are unhealthy AND frequently changed (needs git)',
+  '  seams [dir]       Detect module communities and propose extraction boundaries',
   '  help              Show this message',
   '',
   'Options for run:',

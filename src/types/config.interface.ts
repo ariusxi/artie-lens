@@ -23,6 +23,12 @@ export interface Hotspot {
   findings: string[]
 }
 
+export interface Seam {
+  modules: string[]
+  internal: number
+  crossing: number
+}
+
 export interface MetricInsights {
   total: number
   max: number

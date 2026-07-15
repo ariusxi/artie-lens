@@ -55,6 +55,7 @@ Definitions, and the limitations of each one, are in **[docs/metrics.md](./docs/
 | `artie watch [dir]` | Re-run on every file change (development loop). |
 | `artie suggest [dir]` | Concrete refactoring advice: which cycle to break, which methods to split. |
 | `artie hotspots [dir]` | Rank files that are unhealthy **and** frequently changed. Needs git. |
+| `artie seams [dir]` | Detect module communities and propose extraction boundaries. |
 | `artie help` | List commands and options. |
 
 ## Gate your CI on regressions, not on old debt
@@ -77,6 +78,7 @@ Details, including the absolute gate and `--json` output, in **[docs/ci.md](./do
 - **[Configuration](./docs/configuration.md)** `.artierc.json`, thresholds, includes/excludes.
 - **[Architecture rules](./docs/rules.md)** declare forbidden boundaries between folders.
 - **[Hotspots](./docs/hotspots.md)** metrics crossed with git churn.
+- **[Seams](./docs/seams.md)** module communities as candidate extraction boundaries.
 - **[Continuous integration](./docs/ci.md)** CI gate, baseline/diff, GitHub Action.
 - **[Programmatic use](./docs/api.md)** the exported API.
 

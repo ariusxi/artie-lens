@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/ariusxi/artie-lens/compare/v1.11.1...v1.12.0) (2026-07-15)
+
+
+### Features
+
+* add seams command to find module extraction boundaries ([20c1ff0](https://github.com/ariusxi/artie-lens/commit/20c1ff0c1bd865fe5b02379ea9f1b0fa33c8134e))
+
 ## [1.11.1](https://github.com/ariusxi/artie-lens/compare/v1.11.0...v1.11.1) (2026-07-15)
 
 

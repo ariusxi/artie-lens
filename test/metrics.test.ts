@@ -276,6 +276,34 @@ describe('CYCLIC (circular dependencies)', () => {
   })
 })
 
+describe('type-only imports', () => {
+  it('does not count import type as runtime coupling', async () => {
+    const directory = createProject({
+      'a.ts': `import type { B } from './b'
+        import { c } from './c'
+        export const a = (): B | null => c()`,
+      'b.ts': `export interface B { id: number }`,
+      'c.ts': `export const c = () => null`,
+    })
+
+    const results = await run(calculateCE, directory)
+    // only ./c is a runtime dependency; the type-only import of ./b is erased
+    expect(totalOf(results, 'a.ts')).toBe(1)
+  })
+
+  it('ignores inline type specifiers but keeps value ones', async () => {
+    const directory = createProject({
+      'a.ts': `import { type B, c } from './bc'
+        export const a = (x: B) => c(x)`,
+      'bc.ts': `export interface B { id: number }
+        export const c = (b: B) => b`,
+    })
+
+    const results = await run(calculateCE, directory)
+    expect(totalOf(results, 'a.ts')).toBe(1)
+  })
+})
+
 describe('tsconfig path aliases', () => {
   it('resolves imports through tsconfig paths so coupling is counted', async () => {
     const directory = createProject({

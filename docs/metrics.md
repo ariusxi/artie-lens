@@ -42,5 +42,7 @@ Being explicit here matters more than looking complete.
 - **DIT** follows the `extends` chain and counts every ancestor class it can resolve, including
   external base classes when they are declared as classes in the available typings.
 - **NOC** counts immediate subclasses found **within the analyzed project** only.
-- **CE** and **CYCLIC** resolve relative imports and `tsconfig` path aliases. External
-  (`node_modules`) imports are ignored by design.
+- **CE** and **CYCLIC** measure the **runtime** module graph: they resolve relative imports
+  and `tsconfig` path aliases, ignore external (`node_modules`) imports, and ignore type-only
+  imports (`import type`, and `import { type X }`) since those are erased at compile time.
+  Re-exports (`export * from`) still count, so barrel files can inflate cycle sizes.

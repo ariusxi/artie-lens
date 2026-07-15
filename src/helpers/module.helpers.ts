@@ -1,4 +1,25 @@
-import { Project } from 'ts-morph'
+import { ExportDeclaration, ImportDeclaration, Project } from 'ts-morph'
+
+// Type-only imports/exports are erased at compile time, so they create neither runtime
+// coupling nor runtime cycles. Only edges that survive to runtime count.
+const isRuntimeImport = (declaration: ImportDeclaration): boolean => {
+  if (declaration.isTypeOnly()) return false
+  if (declaration.getDefaultImport() || declaration.getNamespaceImport()) return true
+
+  const named = declaration.getNamedImports()
+  if (named.length === 0) return true // side-effect import: import './x'
+
+  return named.some((specifier) => !specifier.isTypeOnly())
+}
+
+const isRuntimeExport = (declaration: ExportDeclaration): boolean => {
+  if (declaration.isTypeOnly()) return false
+
+  const named = declaration.getNamedExports()
+  if (named.length === 0) return true // export * from './x'
+
+  return named.some((specifier) => !specifier.isTypeOnly())
+}
 
 export const buildModuleGraph = (project: Project, includedPaths: Set<string>): Map<string, Set<string>> => {
   const graph = new Map<string, Set<string>>()
@@ -8,10 +29,11 @@ export const buildModuleGraph = (project: Project, includedPaths: Set<string>): 
     if (!includedPaths.has(path)) continue
 
     const dependencies = new Set<string>()
-    const specifiers = [...sourceFile.getImportDeclarations(), ...sourceFile.getExportDeclarations()]
+    const runtimeImports = sourceFile.getImportDeclarations().filter(isRuntimeImport)
+    const runtimeExports = sourceFile.getExportDeclarations().filter(isRuntimeExport)
 
-    for (const specifier of specifiers) {
-      const target = specifier.getModuleSpecifierSourceFile()
+    for (const declaration of [...runtimeImports, ...runtimeExports]) {
+      const target = declaration.getModuleSpecifierSourceFile()
       if (!target) continue
 
       const targetPath = target.getFilePath()

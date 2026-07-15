@@ -35,7 +35,12 @@ const main = async (args: string[]): Promise<void> => {
   const handler = commands[command]
   if (!handler) return console.log('⚠️  Invalid command. Run `artie help` to see the available commands.')
 
-  await handler(directory, options)
+  try {
+    await handler(directory, options)
+  } catch (error) {
+    console.error(`⚠️  ${error instanceof Error ? error.message : error}`)
+    process.exitCode = 1
+  }
 }
 
 main(process.argv)

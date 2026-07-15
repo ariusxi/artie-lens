@@ -1,4 +1,5 @@
 import path from 'path'
+import { existsSync } from 'fs'
 
 import { ArtieConfig, MetricConfig, MetricInsights, MetricResult, RunOptions } from '../types/config.interface'
 
@@ -7,9 +8,14 @@ import { DEFAULT_BASELINE } from './baseline.helpers'
 
 export const readConfig = (): ArtieConfig => {
   const filePath = path.resolve(process.cwd(), '.artierc.json')
-  const config = readFileContent(filePath)
+  if (!existsSync(filePath)) throw new Error('No .artierc.json found in this directory. Run `artie init` first.')
 
-  return JSON.parse(config)
+  const content = readFileContent(filePath)
+  try {
+    return JSON.parse(content)
+  } catch {
+    throw new Error('.artierc.json is not valid JSON.')
+  }
 }
 
 const flagValue = (flag: string, fallback: string): string => {
@@ -51,8 +57,6 @@ export const resolveMetricConfig = (config: ArtieConfig, metricName: string): Me
     levels: metric.levels ?? defaults.levels,
   }
 }
-
-export const getMetricConfig = (metricName: string): MetricConfig => resolveMetricConfig(readConfig(), metricName)
 
 const EMPTY_INDEXES: MetricInsights = { total: 0, max: 0, min: 0, average: '0', deviation: '0' }
 

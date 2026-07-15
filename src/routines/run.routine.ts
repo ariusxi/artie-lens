@@ -5,7 +5,7 @@ import { printMetric } from '../helpers/print.helpers'
 import { buildAnalysisContext, metricInsights, metricRegistry, severityRank } from '../helpers/metric.helpers'
 import { getEnableMetrics, getMetricIndexes, readConfig, resolveMetricConfig } from '../helpers/config.helpers'
 import { computeRegressions, readBaseline, writeBaseline } from '../helpers/baseline.helpers'
-import { suggestCohesion, suggestCycles } from '../helpers/suggest.helpers'
+import { cohesionFromContext, cyclesFromContext } from '../helpers/suggest.helpers'
 import { DEFAULT_SINCE, getChurn } from '../helpers/git.helpers'
 import { computeHotspots, HOTSPOT_LIMIT } from '../helpers/hotspot.helpers'
 import { checkRules } from '../helpers/rule.helpers'
@@ -176,8 +176,9 @@ export const hotspotLens = async (directory = process.cwd(), options: RunOptions
 
 export const suggestLens = async (directory = process.cwd()): Promise<void> => {
   const config = readConfig()
-  const cycles = await suggestCycles(directory, config.includes!, config.excludes!, config.options.ignoreReExports)
-  const cohesion = await suggestCohesion(directory, config.includes!, config.excludes!)
+  const context = await buildAnalysisContext(directory, config.includes!, config.excludes!, config.options.ignoreReExports)
+  const cycles = context ? cyclesFromContext(context) : []
+  const cohesion = context ? cohesionFromContext(context) : []
 
   console.log('🔧 Suggestions\n')
 

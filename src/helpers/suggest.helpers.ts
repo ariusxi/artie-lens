@@ -1,9 +1,8 @@
 import { relative } from 'path'
 
-import { getSourceFiles } from './file.helpers'
-import { createAnalysisProject } from './project.helpers'
+import { AnalysisContext, buildAnalysisContext } from './metric.helpers'
 import { getCohesionGroups } from './class.helpers'
-import { buildModuleGraph, findCycleGroups, findCyclePath } from './module.helpers'
+import { findCycleGroups, findCyclePath } from './module.helpers'
 
 export interface CycleSuggestion {
   size: number
@@ -15,28 +14,16 @@ export interface CohesionSuggestion {
   groups: { methods: string[]; variables: string[] }[]
 }
 
-export const suggestCycles = async (directory: string, includes: string[], excludes: string[], ignoreReExports = false): Promise<CycleSuggestion[]> => {
-  const files = await getSourceFiles(directory, includes, excludes)
-  if (files.length === 0) return []
-
-  const { project, sourceFiles } = createAnalysisProject(directory, files)
-  const includedPaths = new Set(sourceFiles.map((sourceFile) => sourceFile.getFilePath()))
-  const graph = buildModuleGraph(project, includedPaths, ignoreReExports)
-
-  return findCycleGroups(graph).map((group) => ({
+export const cyclesFromContext = (context: AnalysisContext): CycleSuggestion[] =>
+  findCycleGroups(context.graph).map((group) => ({
     size: group.length,
-    path: findCyclePath(graph, group).map((path) => relative(directory, path)),
+    path: findCyclePath(context.graph, group).map((path) => relative(context.directory, path)),
   }))
-}
 
-export const suggestCohesion = async (directory: string, includes: string[], excludes: string[]): Promise<CohesionSuggestion[]> => {
-  const files = await getSourceFiles(directory, includes, excludes)
-  if (files.length === 0) return []
-
-  const { sourceFiles } = createAnalysisProject(directory, files)
+export const cohesionFromContext = (context: AnalysisContext): CohesionSuggestion[] => {
   const suggestions: CohesionSuggestion[] = []
 
-  for (const sourceFile of sourceFiles) {
+  for (const sourceFile of context.sourceFiles) {
     for (const classDeclaration of sourceFile.getClasses()) {
       const groups = getCohesionGroups(classDeclaration)
       if (groups.length <= 1) continue
@@ -46,4 +33,14 @@ export const suggestCohesion = async (directory: string, includes: string[], exc
   }
 
   return suggestions
+}
+
+export const suggestCycles = async (directory: string, includes: string[], excludes: string[], ignoreReExports = false): Promise<CycleSuggestion[]> => {
+  const context = await buildAnalysisContext(directory, includes, excludes, ignoreReExports)
+  return context ? cyclesFromContext(context) : []
+}
+
+export const suggestCohesion = async (directory: string, includes: string[], excludes: string[]): Promise<CohesionSuggestion[]> => {
+  const context = await buildAnalysisContext(directory, includes, excludes)
+  return context ? cohesionFromContext(context) : []
 }

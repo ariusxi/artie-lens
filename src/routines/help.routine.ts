@@ -10,6 +10,7 @@ const HELP_LINES = [
   '  suggest [dir]     Print concrete refactoring suggestions (cycles, low cohesion)',
   '  hotspots [dir]    Rank files that are unhealthy AND frequently changed (needs git)',
   '  seams [dir]       Detect module communities and propose extraction boundaries',
+  '  comment [dir]     Post a summary of regressions and violations on the current PR (CI)',
   '  help              Show this message',
   '',
   'Options for run:',

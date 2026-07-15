@@ -56,6 +56,7 @@ Definitions, and the limitations of each one, are in **[docs/metrics.md](./docs/
 | `artie suggest [dir]` | Concrete refactoring advice: which cycle to break, which methods to split. |
 | `artie hotspots [dir]` | Rank files that are unhealthy **and** frequently changed. Needs git. |
 | `artie seams [dir]` | Detect module communities and propose extraction boundaries. |
+| `artie comment [dir]` | Post regressions and violations as a sticky PR comment (CI). |
 | `artie help` | List commands and options. |
 
 ## Gate your CI on regressions, not on old debt

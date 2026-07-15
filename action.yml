@@ -22,6 +22,10 @@ inputs:
     description: 'Print the report as JSON'
     required: false
     default: 'false'
+  comment:
+    description: 'Post a summary of regressions and violations as a sticky PR comment'
+    required: false
+    default: 'false'
   version:
     description: 'artie-lens version to run via npx'
     required: false
@@ -40,14 +44,18 @@ runs:
 
     - shell: bash
       env:
+        GITHUB_TOKEN: ${{ github.token }}
         INPUT_DIRECTORY: ${{ inputs.directory }}
         INPUT_FAIL_ON: ${{ inputs.fail-on }}
         INPUT_BASELINE: ${{ inputs.baseline }}
         INPUT_JSON: ${{ inputs.json }}
+        INPUT_COMMENT: ${{ inputs.comment }}
         INPUT_VERSION: ${{ inputs.version }}
       run: |
         set -e
-        args=(run "$INPUT_DIRECTORY")
+        command=run
+        if [ "$INPUT_COMMENT" = "true" ]; then command=comment; fi
+        args=("$command" "$INPUT_DIRECTORY")
         if [ -n "$INPUT_FAIL_ON" ]; then args+=(--fail-on="$INPUT_FAIL_ON"); fi
         if [ "$INPUT_BASELINE" = "true" ]; then
           args+=(--baseline)

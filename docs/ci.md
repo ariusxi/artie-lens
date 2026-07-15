@@ -27,6 +27,35 @@ not a failure, so the first run stays green.
 Architecture rules are **not** subject to the baseline: a violation always fails.
 See [rules.md](./rules.md).
 
+## Pull request comments
+
+Instead of only failing the build, `artie comment` posts a sticky summary of the regressions
+and architecture violations on the pull request, updating the same comment on each push instead
+of adding new ones. It also gates: with `--fail-on`, it exits `1` when there is something to
+review, so the check still blocks the PR.
+
+It reads the PR context from the environment GitHub Actions provides (`GITHUB_TOKEN`,
+`GITHUB_REPOSITORY`, and the event payload), and needs `pull-requests: write` permission.
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  design:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ariusxi/artie-lens@v1
+        with:
+          comment: 'true'
+          baseline: 'true'
+          fail-on: warning
+```
+
+Outside a pull request (no token or PR number), the command skips the comment and just returns
+the gate result.
+
 ## GitHub Action
 
 A composite action wraps the CLI (it sets up Node and runs `artie-lens` for you) and reads

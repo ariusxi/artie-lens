@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/ariusxi/artie-lens/compare/v1.12.0...v1.13.0) (2026-07-15)
+
+
+### Features
+
+* add comment command to post a sticky PR summary ([f317018](https://github.com/ariusxi/artie-lens/commit/f3170188d5d646f412af426cdb62a2f12f6bb0e0))
+
 # [1.12.0](https://github.com/ariusxi/artie-lens/compare/v1.11.1...v1.12.0) (2026-07-15)
 
 

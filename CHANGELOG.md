@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/ariusxi/artie-lens/compare/v1.10.0...v1.10.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* exclude type-only imports from the module dependency graph ([b2559ba](https://github.com/ariusxi/artie-lens/commit/b2559ba455f3e8818e487e47a0715a1f0957d880))
+
 # [1.10.0](https://github.com/ariusxi/artie-lens/compare/v1.9.0...v1.10.0) (2026-07-15)
 
 

@@ -57,7 +57,7 @@ const printRegressions = (regressions: Regression[], baselinePath: string): void
 const collectReport = async (directory: string): Promise<{ report: MetricReport[]; blocks: MetricBlock[]; worstSeverity: number; violations: RuleViolation[] }> => {
   const config = readConfig()
   const metrics = getEnableMetrics(config)
-  const context = await buildAnalysisContext(directory, config.includes!, config.excludes!)
+  const context = await buildAnalysisContext(directory, config.includes!, config.excludes!, config.options.ignoreReExports)
 
   const report: MetricReport[] = []
   const blocks: MetricBlock[] = []
@@ -176,7 +176,7 @@ export const hotspotLens = async (directory = process.cwd(), options: RunOptions
 
 export const suggestLens = async (directory = process.cwd()): Promise<void> => {
   const config = readConfig()
-  const cycles = await suggestCycles(directory, config.includes!, config.excludes!)
+  const cycles = await suggestCycles(directory, config.includes!, config.excludes!, config.options.ignoreReExports)
   const cohesion = await suggestCohesion(directory, config.includes!, config.excludes!)
 
   console.log('🔧 Suggestions\n')
@@ -186,7 +186,9 @@ export const suggestLens = async (directory = process.cwd()): Promise<void> => {
   if (cycles.length) {
     console.log(`Circular dependencies (${cycles.length}):`)
     for (const cycle of cycles) {
-      printMetric(`  cycle: ${cycle.modules.join(' → ')}`, 'CRITICAL')
+      printMetric(`  cycle: ${cycle.path.join(' → ')}`, 'CRITICAL')
+      const extra = cycle.size - (cycle.path.length - 1)
+      if (extra > 0) console.log(`     (part of a ${cycle.size}-module cycle; ${extra} more connected through it, often barrels)`)
       console.log('     Break it by extracting the shared code into a new module, or by depending')
       console.log('     on an interface/type instead of the concrete module.\n')
     }

@@ -51,6 +51,7 @@ export interface ArtieConfig {
   options: {
     defaultThresholds: Thresholds
     metrics: Record<string, MetricConfig>
+    ignoreReExports?: boolean
   }
 }
 

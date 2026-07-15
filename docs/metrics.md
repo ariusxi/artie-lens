@@ -45,4 +45,5 @@ Being explicit here matters more than looking complete.
 - **CE** and **CYCLIC** measure the **runtime** module graph: they resolve relative imports
   and `tsconfig` path aliases, ignore external (`node_modules`) imports, and ignore type-only
   imports (`import type`, and `import { type X }`) since those are erased at compile time.
-  Re-exports (`export * from`) still count, so barrel files can inflate cycle sizes.
+  Re-exports (`export * from`) still count, so barrel files can inflate cycle sizes. Set
+  `options.ignoreReExports` to drop them, and use `artie suggest` to see the actual cycle path.

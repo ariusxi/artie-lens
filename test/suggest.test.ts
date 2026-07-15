@@ -53,6 +53,22 @@ describe('suggestCycles', () => {
     const suggestions = await suggestCycles(directory, ['**/*.ts'], [])
 
     expect(suggestions).toHaveLength(1)
-    expect([...suggestions[0].modules].sort()).toEqual(['a.ts', 'b.ts'])
+    expect(suggestions[0].size).toBe(2)
+    // the path is a real loop: it starts and ends on the same module
+    const { path } = suggestions[0]
+    expect(path[0]).toBe(path[path.length - 1])
+    expect([...new Set(path)].sort()).toEqual(['a.ts', 'b.ts'])
+  })
+
+  it('breaks a barrel-induced cycle when re-exports are ignored', async () => {
+    const directory = createProject({
+      'index.ts': `export * from './a'`,
+      'a.ts': `import { helper } from './index'
+        export const a = () => helper()
+        export const helper = () => 1`,
+    })
+
+    expect(await suggestCycles(directory, ['**/*.ts'], [], false)).toHaveLength(1)
+    expect(await suggestCycles(directory, ['**/*.ts'], [], true)).toHaveLength(0)
   })
 })

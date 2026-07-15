@@ -21,7 +21,7 @@ const isRuntimeExport = (declaration: ExportDeclaration): boolean => {
   return named.some((specifier) => !specifier.isTypeOnly())
 }
 
-export const buildModuleGraph = (project: Project, includedPaths: Set<string>): Map<string, Set<string>> => {
+export const buildModuleGraph = (project: Project, includedPaths: Set<string>, ignoreReExports = false): Map<string, Set<string>> => {
   const graph = new Map<string, Set<string>>()
 
   for (const sourceFile of project.getSourceFiles()) {
@@ -30,7 +30,9 @@ export const buildModuleGraph = (project: Project, includedPaths: Set<string>): 
 
     const dependencies = new Set<string>()
     const runtimeImports = sourceFile.getImportDeclarations().filter(isRuntimeImport)
-    const runtimeExports = sourceFile.getExportDeclarations().filter(isRuntimeExport)
+    // Re-exports (barrels) are pass-throughs; ignoring them breaks hub cycles at the cost
+    // of the transitive edge they carried.
+    const runtimeExports = ignoreReExports ? [] : sourceFile.getExportDeclarations().filter(isRuntimeExport)
 
     for (const declaration of [...runtimeImports, ...runtimeExports]) {
       const target = declaration.getModuleSpecifierSourceFile()
@@ -44,6 +46,33 @@ export const buildModuleGraph = (project: Project, includedPaths: Set<string>): 
   }
 
   return graph
+}
+
+// Extracts one concrete cycle (a real loop of edges) from within a strongly connected
+// component, so the output can show the path instead of just the member count.
+export const findCyclePath = (graph: Map<string, Set<string>>, members: string[]): string[] => {
+  const memberSet = new Set(members)
+  const path: string[] = []
+  const onPath = new Set<string>()
+
+  const walk = (node: string): string[] | null => {
+    path.push(node)
+    onPath.add(node)
+
+    for (const next of graph.get(node) ?? []) {
+      if (!memberSet.has(next)) continue
+      if (onPath.has(next)) return [...path.slice(path.indexOf(next)), next]
+
+      const found = walk(next)
+      if (found) return found
+    }
+
+    path.pop()
+    onPath.delete(node)
+    return null
+  }
+
+  return walk(members[0]) ?? [members[0]]
 }
 
 // Tarjan's strongly connected components: a node belongs to an import cycle when its

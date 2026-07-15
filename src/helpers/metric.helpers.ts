@@ -72,13 +72,13 @@ export interface AnalysisContext {
   graph: Map<string, Set<string>>
 }
 
-export const buildAnalysisContext = async (directory: string, includes: string[], excludes: string[]): Promise<AnalysisContext | null> => {
+export const buildAnalysisContext = async (directory: string, includes: string[], excludes: string[], ignoreReExports = false): Promise<AnalysisContext | null> => {
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return null
 
   const { project, sourceFiles } = createAnalysisProject(directory, files)
   const includedPaths = new Set(sourceFiles.map((sourceFile) => sourceFile.getFilePath()))
-  const graph = buildModuleGraph(project, includedPaths)
+  const graph = buildModuleGraph(project, includedPaths, ignoreReExports)
 
   return { directory, sourceFiles, graph }
 }

@@ -35,6 +35,7 @@
 | `metrics.<name>.warning` / `critical` | Per-metric thresholds. **If omitted, the metric inherits `defaultThresholds`** (so `cbo` above uses `warning: 10`, `critical: 20`). |
 | `options.defaultThresholds.levels` | **Display filter**: only classes whose label is in this list are printed. Keep `"OK"` to show everything, drop it to show only problems. |
 | `includes` / `excludes` | [fast-glob](https://github.com/mrmlnc/fast-glob) patterns, resolved relative to the analyzed directory. Note the plural keys. |
+| `options.ignoreReExports` | When `true`, re-export edges (`export * from`) are dropped from the module graph. Barrel files (`index.ts`) create hub cycles, so this separates them from real import cycles. Default `false`. |
 | `rules` | Architecture rules. See [rules.md](./rules.md). |
 
 ## How labels are assigned

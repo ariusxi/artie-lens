@@ -3,10 +3,11 @@ import { relative } from 'path'
 import { getSourceFiles } from './file.helpers'
 import { createAnalysisProject } from './project.helpers'
 import { getCohesionGroups } from './class.helpers'
-import { buildModuleGraph, findCycleGroups } from './module.helpers'
+import { buildModuleGraph, findCycleGroups, findCyclePath } from './module.helpers'
 
 export interface CycleSuggestion {
-  modules: string[]
+  size: number
+  path: string[]
 }
 
 export interface CohesionSuggestion {
@@ -14,16 +15,17 @@ export interface CohesionSuggestion {
   groups: { methods: string[]; variables: string[] }[]
 }
 
-export const suggestCycles = async (directory: string, includes: string[], excludes: string[]): Promise<CycleSuggestion[]> => {
+export const suggestCycles = async (directory: string, includes: string[], excludes: string[], ignoreReExports = false): Promise<CycleSuggestion[]> => {
   const files = await getSourceFiles(directory, includes, excludes)
   if (files.length === 0) return []
 
   const { project, sourceFiles } = createAnalysisProject(directory, files)
   const includedPaths = new Set(sourceFiles.map((sourceFile) => sourceFile.getFilePath()))
-  const graph = buildModuleGraph(project, includedPaths)
+  const graph = buildModuleGraph(project, includedPaths, ignoreReExports)
 
   return findCycleGroups(graph).map((group) => ({
-    modules: group.map((path) => relative(directory, path)),
+    size: group.length,
+    path: findCyclePath(graph, group).map((path) => relative(directory, path)),
   }))
 }
 

@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/ariusxi/artie-lens/compare/v1.11.0...v1.11.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* report a clean error for missing or invalid .artierc.json ([79d340b](https://github.com/ariusxi/artie-lens/commit/79d340b89c6dce0ec723f5bbe11c56009b0aa6f2))
+
 # [1.11.0](https://github.com/ariusxi/artie-lens/compare/v1.10.1...v1.11.0) (2026-07-15)
 
 

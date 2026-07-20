@@ -7,6 +7,7 @@ import { getSourceFiles } from './file.helpers'
 import { createAnalysisProject } from './project.helpers'
 import { getCohesionLength, getCoupledClasses, getDepthOfInheritance, getNumberOfChildren, getResponseSetLength, getWeightedMethods } from './class.helpers'
 import { buildModuleGraph, findCycleSizes } from './module.helpers'
+import { computeMartin } from './martin.helpers'
 
 const UNNAMED_CLASS = '[UnnamedClass]'
 
@@ -61,6 +62,11 @@ export const metricInsights: Record<string, Record<string, string>> = {
     OK: 'No circular dependency.',
     WARNING: 'This module is part of an import cycle → harder to test and build.',
     CRITICAL: 'This module is part of an import cycle → hard to test, build, and reason about. Suggestion: break the cycle with an interface or a shared module.',
+  },
+  distance: {
+    OK: 'Balanced: abstraction matches how much the module is depended on.',
+    WARNING: 'Drifting from the main sequence → either too abstract and unused, or too concrete and depended on.',
+    CRITICAL: 'Far from the main sequence → a concrete, widely-used module (hard to change) or an abstract, unused one (dead weight).',
   },
 }
 
@@ -135,6 +141,18 @@ export const metricRegistry: Record<string, ContextMetric> = {
   noc: classMetric(getNumberOfChildren),
   ce: moduleMetric(efferentCoupling),
   cyclic: moduleMetric(findCycleSizes),
+  distance: (context, metricConfig) => {
+    const martin = computeMartin(context.graph, context.sourceFiles)
+    const items: MetricResult[] = []
+
+    for (const [path, metrics] of martin) {
+      const total = Math.round(metrics.distance * 100)
+      const value = relative(context.directory, path)
+      items.push({ total, label: getMetricLabel(total, metricConfig), value, file: value })
+    }
+
+    return items
+  },
 }
 
 type MetricCalculator = (directory: string, metricConfig: MetricConfig, includes: string[], excludes: string[]) => Promise<MetricResult[]>

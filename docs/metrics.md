@@ -26,6 +26,7 @@ with no classes at all. The reported value is the module path.
 | --- | --- | --- | --- |
 | **CE** | Efferent Coupling | Number of distinct project modules the file imports (via `import` and `export ... from`). | The module is fragile to upstream changes; a coupling hub. |
 | **CYCLIC** | Circular dependency | Size of the import cycle the module belongs to (`0` when acyclic), found with Tarjan's SCC. | An import cycle: hard to test, build, and reason about. |
+| **DISTANCE** | Distance from the main sequence | Robert Martin's `D = \|A + I - 1\|`, scaled to `0..100`. `A` is abstractness (interfaces and abstract classes over all types), `I` is instability (`Ce / (Ca + Ce)`). | A concrete module everyone depends on (hard to change) or an abstract module nobody uses (dead weight). |
 
 ## Scope and known limitations
 

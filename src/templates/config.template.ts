@@ -43,6 +43,11 @@ export const configTemplate = {
         enabled: true,
         warning: 1,
         critical: 1
+      },
+      distance: {
+        enabled: true,
+        warning: 50,
+        critical: 70
       }
     }
   },

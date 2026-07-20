@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/ariusxi/artie-lens/compare/v1.15.0...v1.16.0) (2026-07-20)
+
+
+### Features
+
+* add historical trend tracking with run --record and trend ([0420888](https://github.com/ariusxi/artie-lens/commit/04208883dca561a8e881e08aee8d2ffffa839f86))
+
 # [1.15.0](https://github.com/ariusxi/artie-lens/compare/v1.14.0...v1.15.0) (2026-07-20)
 
 

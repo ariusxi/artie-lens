@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/ariusxi/artie-lens/compare/v1.16.1...v1.17.0) (2026-07-20)
+
+
+### Features
+
+* APM-style dashboard with a live server, HTML split into a template layer ([b77a56a](https://github.com/ariusxi/artie-lens/commit/b77a56af59173b3d515d888ddb0c77611f9ed088))
+
 ## [1.16.1](https://github.com/ariusxi/artie-lens/compare/v1.16.0...v1.16.1) (2026-07-20)
 
 

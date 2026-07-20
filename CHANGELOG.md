@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/ariusxi/artie-lens/compare/v1.14.0...v1.15.0) (2026-07-20)
+
+
+### Features
+
+* add distance metric (Martin's distance from the main sequence) ([c87863d](https://github.com/ariusxi/artie-lens/commit/c87863d453da1a77a3f7cc207bfb3fad8638f0ad))
+
 # [1.14.0](https://github.com/ariusxi/artie-lens/compare/v1.13.0...v1.14.0) (2026-07-20)
 
 

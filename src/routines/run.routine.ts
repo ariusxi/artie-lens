@@ -5,6 +5,8 @@ import { computeRegressions, readBaseline, writeBaseline } from '../helpers/base
 import { checkRules } from '../helpers/rule.helpers'
 import { buildSarif } from '../helpers/sarif.helpers'
 import { buildHtmlReport } from '../helpers/report.html'
+import { getCurrentCommit } from '../helpers/git.helpers'
+import { appendSnapshot, buildSnapshot } from '../helpers/trend.helpers'
 import { printMetricFiles, printMetricSummary, printRegressions, printViolations } from './report.printer'
 import { writeFileSync } from 'fs'
 
@@ -97,6 +99,11 @@ export const runLens = async (directory = process.cwd(), options: RunOptions = {
   const { report, blocks, worstSeverity, violations } = await collectReport(directory)
 
   writeReports(options, report, violations)
+
+  if (options.record) {
+    appendSnapshot(options.record, buildSnapshot(report, violations, getCurrentCommit(directory), new Date().toISOString()))
+    if (!options.json) console.log(`✓ Snapshot recorded to ${options.record}`)
+  }
 
   if (options.saveBaseline) return saveBaseline(options, report)
   if (options.baseline) return runBaseline(options, report, violations)

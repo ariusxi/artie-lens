@@ -72,6 +72,15 @@ export interface RunOptions {
   since?: string
   sarif?: string
   html?: string
+  record?: string
+}
+
+export interface Snapshot {
+  at: string
+  commit: string
+  warnings: number
+  criticals: number
+  violations: number
 }
 
 export interface MetricReport {

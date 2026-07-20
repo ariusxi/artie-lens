@@ -5,6 +5,7 @@ import { ArtieConfig, MetricConfig, MetricInsights, MetricResult, RunOptions } f
 
 import { readFileContent } from './file.helpers'
 import { DEFAULT_BASELINE } from './baseline.helpers'
+import { DEFAULT_HISTORY } from './trend.helpers'
 
 export const readConfig = (): ArtieConfig => {
   const filePath = path.resolve(process.cwd(), '.artierc.json')
@@ -36,7 +37,8 @@ export const parseRunOptions = (flags: string[]): RunOptions => {
     if (flag === '--save-baseline' || flag.startsWith('--save-baseline=')) { options.saveBaseline = flagValue(flag, DEFAULT_BASELINE); continue }
     if (flag === '--baseline' || flag.startsWith('--baseline=')) { options.baseline = flagValue(flag, DEFAULT_BASELINE); continue }
     if (flag === '--sarif' || flag.startsWith('--sarif=')) { options.sarif = flagValue(flag, 'artie-lens.sarif'); continue }
-    if (flag === '--html' || flag.startsWith('--html=')) { options.html = flagValue(flag, 'artie-lens.html') }
+    if (flag === '--html' || flag.startsWith('--html=')) { options.html = flagValue(flag, 'artie-lens.html'); continue }
+    if (flag === '--record' || flag.startsWith('--record=')) { options.record = flagValue(flag, DEFAULT_HISTORY) }
   }
 
   return options

@@ -20,6 +20,11 @@ export const getRepositoryRoot = (directory: string): string | null => {
   return output.trim()
 }
 
+export const getCurrentCommit = (directory: string): string => {
+  const output = runGit(directory, ['rev-parse', '--short', 'HEAD'])
+  return output ? output.trim() : 'unknown'
+}
+
 // Counts how many commits touched each file in the given window. Returns paths relative to
 // the analyzed directory, or null when the directory is not a git repository.
 export const getChurn = (directory: string, since: string): Map<string, number> | null => {

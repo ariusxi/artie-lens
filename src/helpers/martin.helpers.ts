@@ -12,7 +12,7 @@ export interface MartinMetrics {
 //   Ce afferent, Ca efferent, I = Ce/(Ca+Ce), A = abstract types / all types,
 //   D = |A + I - 1| (distance from the main sequence, 0 good, 1 bad).
 export const computeMartin = (graph: Map<string, Set<string>>, sourceFiles: SourceFile[]): Map<string, MartinMetrics> => {
-  const byPath = new Map(sourceFiles.map((sourceFile) => [sourceFile.getFilePath(), sourceFile]))
+  const byPath = new Map<string, SourceFile>(sourceFiles.map((sourceFile) => [sourceFile.getFilePath(), sourceFile]))
 
   const afferent = new Map<string, number>()
   for (const [, dependencies] of graph) {

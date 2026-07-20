@@ -1,3 +1,10 @@
+## [1.16.1](https://github.com/ariusxi/artie-lens/compare/v1.16.0...v1.16.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* export the documented API from the barrel and fix a ts-morph path type ([c24fe37](https://github.com/ariusxi/artie-lens/commit/c24fe371dd9a3df9c580a5441ae6c630a9d9279b))
+
 # [1.16.0](https://github.com/ariusxi/artie-lens/compare/v1.15.0...v1.16.0) (2026-07-20)
 
 

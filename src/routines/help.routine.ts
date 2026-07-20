@@ -18,6 +18,8 @@ const HELP_LINES = [
   '  --fail-on=LEVEL           Exit 1 if any class reaches LEVEL (warning or critical)',
   '  --save-baseline[=FILE]    Save the current run as a baseline (default .artie-baseline.json)',
   '  --baseline[=FILE]         Compare against a baseline and report only regressions',
+  '  --sarif[=FILE]            Also write a SARIF report (default artie-lens.sarif)',
+  '  --html[=FILE]             Also write an HTML report (default artie-lens.html)',
   '',
   'Options for hotspots:',
   '  --since=EXPR              Churn window, any git date expression (default "90 days ago")',

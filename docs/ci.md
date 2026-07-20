@@ -27,6 +27,20 @@ not a failure, so the first run stays green.
 Architecture rules are **not** subject to the baseline: a violation always fails.
 See [rules.md](./rules.md).
 
+## Report formats
+
+Alongside the console output, `run` can write machine and human reports (they are additive, so
+they compose with `--fail-on`):
+
+```bash
+artie run --sarif           # writes artie-lens.sarif
+artie run --html=report.html
+```
+
+- **SARIF** (`--sarif[=FILE]`) shows up in the GitHub Code Scanning tab when uploaded with
+  `github/codeql-action/upload-sarif`.
+- **HTML** (`--html[=FILE]`) is a self-contained, shareable report of the flagged findings.
+
 ## Pull request comments
 
 Instead of only failing the build, `artie comment` posts a sticky summary of the regressions

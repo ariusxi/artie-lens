@@ -3,7 +3,10 @@ import { buildAnalysisContext, metricRegistry, severityRank } from '../helpers/m
 import { getEnableMetrics, getMetricIndexes, readConfig, resolveMetricConfig } from '../helpers/config.helpers'
 import { computeRegressions, readBaseline, writeBaseline } from '../helpers/baseline.helpers'
 import { checkRules } from '../helpers/rule.helpers'
+import { buildSarif } from '../helpers/sarif.helpers'
+import { buildHtmlReport } from '../helpers/report.html'
 import { printMetricFiles, printMetricSummary, printRegressions, printViolations } from './report.printer'
+import { writeFileSync } from 'fs'
 
 export interface MetricBlock {
   metric: string
@@ -79,8 +82,21 @@ const runBaseline = (options: RunOptions, report: MetricReport[], violations: Ru
   return result
 }
 
+const writeReports = (options: RunOptions, report: MetricReport[], violations: RuleViolation[]): void => {
+  if (options.sarif) {
+    writeFileSync(options.sarif, JSON.stringify(buildSarif(report, violations), null, 2))
+    if (!options.json) console.log(`✓ SARIF written to ${options.sarif}`)
+  }
+  if (options.html) {
+    writeFileSync(options.html, buildHtmlReport(report, violations))
+    if (!options.json) console.log(`✓ HTML report written to ${options.html}`)
+  }
+}
+
 export const runLens = async (directory = process.cwd(), options: RunOptions = {}): Promise<RunReport> => {
   const { report, blocks, worstSeverity, violations } = await collectReport(directory)
+
+  writeReports(options, report, violations)
 
   if (options.saveBaseline) return saveBaseline(options, report)
   if (options.baseline) return runBaseline(options, report, violations)

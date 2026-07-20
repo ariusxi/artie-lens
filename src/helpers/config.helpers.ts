@@ -34,7 +34,9 @@ export const parseRunOptions = (flags: string[]): RunOptions => {
     if (flag.startsWith('--since=')) { options.since = flag.split('=').slice(1).join('='); continue }
     if (flag.startsWith('--fail-on=')) { options.failOn = flag.split('=')[1]?.toUpperCase(); continue }
     if (flag === '--save-baseline' || flag.startsWith('--save-baseline=')) { options.saveBaseline = flagValue(flag, DEFAULT_BASELINE); continue }
-    if (flag === '--baseline' || flag.startsWith('--baseline=')) { options.baseline = flagValue(flag, DEFAULT_BASELINE) }
+    if (flag === '--baseline' || flag.startsWith('--baseline=')) { options.baseline = flagValue(flag, DEFAULT_BASELINE); continue }
+    if (flag === '--sarif' || flag.startsWith('--sarif=')) { options.sarif = flagValue(flag, 'artie-lens.sarif'); continue }
+    if (flag === '--html' || flag.startsWith('--html=')) { options.html = flagValue(flag, 'artie-lens.html') }
   }
 
   return options

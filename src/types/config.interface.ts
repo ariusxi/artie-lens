@@ -70,6 +70,8 @@ export interface RunOptions {
   suggest?: boolean
   hotspots?: boolean
   since?: string
+  sarif?: string
+  html?: string
 }
 
 export interface MetricReport {

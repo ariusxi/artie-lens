@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/ariusxi/artie-lens/compare/v1.13.0...v1.14.0) (2026-07-20)
+
+
+### Features
+
+* add SARIF and HTML report outputs to run ([30f549e](https://github.com/ariusxi/artie-lens/commit/30f549e0f75728529312b5d49825bc1834d62387))
+
 # [1.13.0](https://github.com/ariusxi/artie-lens/compare/v1.12.0...v1.13.0) (2026-07-15)
 
 

@@ -9,11 +9,13 @@ import { hotspotLens } from './routines/hotspots.routine'
 import { seamLens } from './routines/seams.routine'
 import { commentLens } from './routines/comment.routine'
 import { trendLens } from './routines/trend.routine'
+import { dashboardLens } from './routines/dashboard.routine'
 
 type Command = (directory: string | undefined, options: RunOptions) => void | Promise<void>
 
 const runCommand: Command = async (directory, options) => {
   // Deprecated flag aliases, kept so `run --watch` and friends keep working
+  if (options.watch && options.html) return dashboardLens(directory, options)
   if (options.watch) return watchLens(directory, options)
   if (options.suggest) return suggestLens(directory)
   if (options.hotspots) return hotspotLens(directory, options)
@@ -33,9 +35,11 @@ const commands: Record<string, Command> = {
   hotspots: (directory, options) => hotspotLens(directory, options),
   seams: (directory, options) => seamLens(directory, options),
   comment: async (directory, options) => {
-    if (await commentLens(directory, options)) process.exitCode = 1
+    const failed = await commentLens(directory, options)
+    if (failed) process.exitCode = 1
   },
   trend: (directory, options) => trendLens(directory, options),
+  dashboard: (directory, options) => dashboardLens(directory, options),
 }
 
 const main = async (args: string[]): Promise<void> => {

@@ -39,7 +39,8 @@ artie run --html=report.html
 
 - **SARIF** (`--sarif[=FILE]`) shows up in the GitHub Code Scanning tab when uploaded with
   `github/codeql-action/upload-sarif`.
-- **HTML** (`--html[=FILE]`) is a self-contained, shareable report of the flagged findings.
+- **HTML** (`--html[=FILE]`) is a self-contained dashboard (KPIs, charts, tables). For a live,
+  auto-refreshing version see [dashboard.md](./dashboard.md).
 
 ## Pull request comments
 

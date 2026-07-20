@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildSarif } from '../src/helpers/sarif.helpers'
-import { buildHtmlReport } from '../src/helpers/report.html'
+import { buildDashboard } from '../src/helpers/report.dashboard'
 import { MetricReport, RuleViolation } from '../src/types/config.interface'
+
+const dashboard = (report: MetricReport[], violations: RuleViolation[], live = false) =>
+  buildDashboard({ report, violations, hotspots: [], generatedAt: '2026-01-01T00:00:00Z', live })
 
 const summary = { total: 0, max: 0, min: 0, average: '0', deviation: '0' }
 
@@ -39,19 +42,26 @@ describe('buildSarif', () => {
   })
 })
 
-describe('buildHtmlReport', () => {
-  it('renders a self-contained document with the flagged findings', () => {
-    const html = buildHtmlReport(report, violations)
+describe('buildDashboard', () => {
+  it('renders a self-contained dashboard with KPIs and the flagged findings', () => {
+    const html = dashboard(report, violations)
 
     expect(html.startsWith('<!doctype html>')).toBe(true)
+    expect(html).toContain('artie-lens')
+    expect(html).toContain('Worst offenders')
     expect(html).toContain('OrderService')
-    expect(html).toContain('CRITICAL')
     expect(html).toContain('Architecture violations')
-    expect(html).not.toContain('>Ok<') // OK classes are not listed
+    expect(html).toContain('needs attention') // failed status because there is a CRITICAL and a violation
   })
 
-  it('reports a clean result when there is nothing to flag', () => {
-    const html = buildHtmlReport([{ metric: 'wmc', summary, classes: [{ value: 'Ok', total: 1, label: 'OK', file: 'x.ts' }] }], [])
-    expect(html).toContain('No warnings, criticals or violations')
+  it('shows a healthy status and no live script when clean and not live', () => {
+    const html = dashboard([{ metric: 'wmc', summary, classes: [{ value: 'Ok', total: 1, label: 'OK', file: 'x.ts' }] }], [])
+
+    expect(html).toContain('healthy')
+    expect(html).not.toContain('EventSource')
+  })
+
+  it('injects the live-reload script when live', () => {
+    expect(dashboard(report, violations, true)).toContain('EventSource')
   })
 })

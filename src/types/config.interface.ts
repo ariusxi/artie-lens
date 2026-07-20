@@ -73,6 +73,7 @@ export interface RunOptions {
   sarif?: string
   html?: string
   record?: string
+  port?: string
 }
 
 export interface Snapshot {

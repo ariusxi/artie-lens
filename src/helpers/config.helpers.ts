@@ -39,6 +39,7 @@ const VALUE_FLAGS: Record<string, ValueFlag> = {
   '--sarif': { set: (options, value) => { options.sarif = value }, default: 'artie-lens.sarif' },
   '--html': { set: (options, value) => { options.html = value }, default: 'artie-lens.html' },
   '--record': { set: (options, value) => { options.record = value }, default: DEFAULT_HISTORY },
+  '--port': { set: (options, value) => { options.port = value } },
 }
 
 export const parseRunOptions = (flags: string[]): RunOptions => {

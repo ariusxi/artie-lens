@@ -1,11 +1,12 @@
-import { MetricInsights, MetricReport, MetricResult, RuleViolation, RunOptions, RunReport } from '../types/config.interface'
+import { Hotspot, MetricInsights, MetricReport, MetricResult, RuleViolation, RunOptions, RunReport } from '../types/config.interface'
 import { buildAnalysisContext, metricRegistry, severityRank } from '../helpers/metric.helpers'
 import { getEnableMetrics, getMetricIndexes, readConfig, resolveMetricConfig } from '../helpers/config.helpers'
 import { computeRegressions, readBaseline, writeBaseline } from '../helpers/baseline.helpers'
 import { checkRules } from '../helpers/rule.helpers'
 import { buildSarif } from '../helpers/sarif.helpers'
-import { buildHtmlReport } from '../helpers/report.html'
-import { getCurrentCommit } from '../helpers/git.helpers'
+import { buildDashboard } from '../helpers/report.dashboard'
+import { DEFAULT_SINCE, getChurn, getCurrentCommit } from '../helpers/git.helpers'
+import { computeHotspots } from '../helpers/hotspot.helpers'
 import { appendSnapshot, buildSnapshot } from '../helpers/trend.helpers'
 import { printMetricFiles, printMetricSummary, printRegressions, printViolations } from './report.printer'
 import { writeFileSync } from 'fs'
@@ -84,21 +85,27 @@ const runBaseline = (options: RunOptions, report: MetricReport[], violations: Ru
   return result
 }
 
-const writeReports = (options: RunOptions, report: MetricReport[], violations: RuleViolation[]): void => {
+const gatherHotspots = (directory: string, report: MetricReport[]): Hotspot[] => {
+  const churn = getChurn(directory, DEFAULT_SINCE)
+  return churn ? computeHotspots(report, churn) : []
+}
+
+const writeReports = (directory: string, options: RunOptions, report: MetricReport[], violations: RuleViolation[]): void => {
   if (options.sarif) {
     writeFileSync(options.sarif, JSON.stringify(buildSarif(report, violations), null, 2))
     if (!options.json) console.log(`✓ SARIF written to ${options.sarif}`)
   }
   if (options.html) {
-    writeFileSync(options.html, buildHtmlReport(report, violations))
-    if (!options.json) console.log(`✓ HTML report written to ${options.html}`)
+    const hotspots = gatherHotspots(directory, report)
+    writeFileSync(options.html, buildDashboard({ report, violations, hotspots, generatedAt: new Date().toISOString(), live: false }))
+    if (!options.json) console.log(`✓ HTML dashboard written to ${options.html}`)
   }
 }
 
 export const runLens = async (directory = process.cwd(), options: RunOptions = {}): Promise<RunReport> => {
   const { report, blocks, worstSeverity, violations } = await collectReport(directory)
 
-  writeReports(options, report, violations)
+  writeReports(directory, options, report, violations)
 
   if (options.record) {
     appendSnapshot(options.record, buildSnapshot(report, violations, getCurrentCommit(directory), new Date().toISOString()))

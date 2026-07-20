@@ -57,6 +57,7 @@ Definitions, and the limitations of each one, are in **[docs/metrics.md](./docs/
 | `artie hotspots [dir]` | Rank files that are unhealthy **and** frequently changed. Needs git. |
 | `artie seams [dir]` | Detect module communities and propose extraction boundaries. |
 | `artie comment [dir]` | Post regressions and violations as a sticky PR comment (CI). |
+| `artie dashboard [dir]` | Serve a live, auto-refreshing HTML dashboard. |
 | `artie help` | List commands and options. |
 
 ## Gate your CI on regressions, not on old debt
@@ -80,6 +81,7 @@ Details, including the absolute gate and `--json` output, in **[docs/ci.md](./do
 - **[Architecture rules](./docs/rules.md)** declare forbidden boundaries between folders.
 - **[Hotspots](./docs/hotspots.md)** metrics crossed with git churn.
 - **[Seams](./docs/seams.md)** module communities as candidate extraction boundaries.
+- **[Dashboard](./docs/dashboard.md)** static HTML report and a live, auto-refreshing server.
 - **[Continuous integration](./docs/ci.md)** CI gate, baseline/diff, GitHub Action.
 - **[Programmatic use](./docs/api.md)** the exported API.
 

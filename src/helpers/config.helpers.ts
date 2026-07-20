@@ -19,26 +19,45 @@ export const readConfig = (): ArtieConfig => {
   }
 }
 
-const flagValue = (flag: string, fallback: string): string => {
-  const value = flag.split('=').slice(1).join('=')
-  return value || fallback
+const BOOLEAN_FLAGS: Record<string, (options: RunOptions) => void> = {
+  '--json': (options) => { options.json = true },
+  '--watch': (options) => { options.watch = true },
+  '--suggest': (options) => { options.suggest = true },
+  '--hotspots': (options) => { options.hotspots = true },
+}
+
+interface ValueFlag {
+  set: (options: RunOptions, value: string) => void
+  default?: string
+}
+
+const VALUE_FLAGS: Record<string, ValueFlag> = {
+  '--since': { set: (options, value) => { options.since = value } },
+  '--fail-on': { set: (options, value) => { options.failOn = value.toUpperCase() } },
+  '--save-baseline': { set: (options, value) => { options.saveBaseline = value }, default: DEFAULT_BASELINE },
+  '--baseline': { set: (options, value) => { options.baseline = value }, default: DEFAULT_BASELINE },
+  '--sarif': { set: (options, value) => { options.sarif = value }, default: 'artie-lens.sarif' },
+  '--html': { set: (options, value) => { options.html = value }, default: 'artie-lens.html' },
+  '--record': { set: (options, value) => { options.record = value }, default: DEFAULT_HISTORY },
 }
 
 export const parseRunOptions = (flags: string[]): RunOptions => {
   const options: RunOptions = {}
 
   for (const flag of flags) {
-    if (flag === '--json') { options.json = true; continue }
-    if (flag === '--watch') { options.watch = true; continue }
-    if (flag === '--suggest') { options.suggest = true; continue }
-    if (flag === '--hotspots') { options.hotspots = true; continue }
-    if (flag.startsWith('--since=')) { options.since = flag.split('=').slice(1).join('='); continue }
-    if (flag.startsWith('--fail-on=')) { options.failOn = flag.split('=')[1]?.toUpperCase(); continue }
-    if (flag === '--save-baseline' || flag.startsWith('--save-baseline=')) { options.saveBaseline = flagValue(flag, DEFAULT_BASELINE); continue }
-    if (flag === '--baseline' || flag.startsWith('--baseline=')) { options.baseline = flagValue(flag, DEFAULT_BASELINE); continue }
-    if (flag === '--sarif' || flag.startsWith('--sarif=')) { options.sarif = flagValue(flag, 'artie-lens.sarif'); continue }
-    if (flag === '--html' || flag.startsWith('--html=')) { options.html = flagValue(flag, 'artie-lens.html'); continue }
-    if (flag === '--record' || flag.startsWith('--record=')) { options.record = flagValue(flag, DEFAULT_HISTORY) }
+    const [name, ...rest] = flag.split('=')
+
+    const booleanFlag = BOOLEAN_FLAGS[name]
+    if (booleanFlag) {
+      booleanFlag(options)
+      continue
+    }
+
+    const valueFlag = VALUE_FLAGS[name]
+    if (!valueFlag) continue
+
+    const value = rest.join('=') || valueFlag.default
+    if (value !== undefined) valueFlag.set(options, value)
   }
 
   return options

@@ -5,7 +5,11 @@ import { MetricConfig, MetricResult } from '../types/config.interface'
 
 import { getSourceFiles } from './file.helpers'
 import { createAnalysisProject } from './project.helpers'
-import { getCohesionLength, getCoupledClasses, getDepthOfInheritance, getNumberOfChildren, getResponseSetLength, getWeightedMethods } from './class.helpers'
+import { getCoupledClasses } from './coupling.helpers'
+import { getCohesionLength } from './cohesion.helpers'
+import { getWeightedMethods } from './complexity.helpers'
+import { getDepthOfInheritance, getNumberOfChildren } from './inheritance.helpers'
+import { getResponseSetLength } from './response-set.helpers'
 import { buildModuleGraph, findCycleSizes } from './module.helpers'
 import { computeMartin } from './martin.helpers'
 

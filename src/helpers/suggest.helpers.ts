@@ -1,7 +1,7 @@
 import { relative } from 'path'
 
 import { AnalysisContext, buildAnalysisContext } from './metric.helpers'
-import { getCohesionGroups } from './class.helpers'
+import { getCohesionGroups } from './cohesion.helpers'
 import { findCycleGroups, findCyclePath } from './module.helpers'
 
 export interface CycleSuggestion {

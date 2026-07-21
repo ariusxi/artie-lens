@@ -1,3 +1,11 @@
+## [1.18.1](https://github.com/ariusxi/artie-lens/compare/v1.18.0...v1.18.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* **dashboard:** squarified treemap layout ([dcba315](https://github.com/ariusxi/artie-lens/commit/dcba3157d57c619a5b6c0a466dab805c65b98548))
+* **i18n:** use the crossing term for boundary edges in Arabic ([ead15e8](https://github.com/ariusxi/artie-lens/commit/ead15e8fef36240d0d7f5ffd5bc49826f04f44c1))
+
 # [1.18.0](https://github.com/ariusxi/artie-lens/compare/v1.17.0...v1.18.0) (2026-07-21)
 
 

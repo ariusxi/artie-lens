@@ -1,3 +1,11 @@
+# [1.18.0](https://github.com/ariusxi/artie-lens/compare/v1.17.0...v1.18.0) (2026-07-21)
+
+
+### Features
+
+* **dashboard:** interactive instrument-style dashboard with tabs and charts ([f4c3c26](https://github.com/ariusxi/artie-lens/commit/f4c3c266364b89081e3816decc994610ec3c9233))
+* **dashboard:** light/dark theme toggle and 10-language i18n ([119d5aa](https://github.com/ariusxi/artie-lens/commit/119d5aa3ff10ceada3e4dd223eac6cec62e43b54))
+
 # [1.17.0](https://github.com/ariusxi/artie-lens/compare/v1.16.1...v1.17.0) (2026-07-20)
 
 

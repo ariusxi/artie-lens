@@ -455,7 +455,7 @@ const ar: Dictionary = {
   col_warn: 'تحذير',
   col_modules: 'الوحدات',
   col_internal: 'داخلي',
-  col_crossing: 'عابر',
+  col_crossing: 'عبور',
   col_cohesion: 'التماسك',
   filter_ph: 'تصفية…',
   dist_across: 'التوزيع عبر {n} صنف',

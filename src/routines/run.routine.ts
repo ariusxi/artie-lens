@@ -1,15 +1,17 @@
-import { Hotspot, MetricInsights, MetricReport, MetricResult, RuleViolation, RunOptions, RunReport } from '../types/config.interface'
-import { buildAnalysisContext, metricRegistry, severityRank } from '../helpers/metric.helpers'
+import { MetricInsights, MetricReport, MetricResult, RuleViolation, RunOptions, RunReport } from '../types/config.interface'
+import { AnalysisContext, buildAnalysisContext, metricRegistry, severityRank } from '../helpers/metric.helpers'
 import { getEnableMetrics, getMetricIndexes, readConfig, resolveMetricConfig } from '../helpers/config.helpers'
 import { computeRegressions, readBaseline, writeBaseline } from '../helpers/baseline.helpers'
 import { checkRules } from '../helpers/rule.helpers'
 import { buildSarif } from '../helpers/sarif.helpers'
-import { buildDashboard } from '../helpers/report.dashboard'
+import { buildDashboard, DashboardData } from '../helpers/report.dashboard'
 import { DEFAULT_SINCE, getChurn, getCurrentCommit } from '../helpers/git.helpers'
 import { computeHotspots } from '../helpers/hotspot.helpers'
-import { appendSnapshot, buildSnapshot } from '../helpers/trend.helpers'
+import { computeSeams, findCommunities } from '../helpers/seam.helpers'
+import { cohesionFromContext, cyclesFromContext } from '../helpers/suggest.helpers'
+import { appendSnapshot, buildSnapshot, DEFAULT_HISTORY, readHistory } from '../helpers/trend.helpers'
 import { printMetricFiles, printMetricSummary, printRegressions, printViolations } from './report.printer'
-import { writeFileSync } from 'fs'
+import { existsSync, writeFileSync } from 'fs'
 
 export interface MetricBlock {
   metric: string
@@ -22,6 +24,7 @@ export interface CollectedReport {
   blocks: MetricBlock[]
   worstSeverity: number
   violations: RuleViolation[]
+  context: AnalysisContext | null
 }
 
 export const collectReport = async (directory: string): Promise<CollectedReport> => {
@@ -46,7 +49,36 @@ export const collectReport = async (directory: string): Promise<CollectedReport>
 
   const violations = context && config.rules ? checkRules(context.graph, directory, config.rules) : []
 
-  return { report, blocks, worstSeverity, violations }
+  return { report, blocks, worstSeverity, violations, context }
+}
+
+// Assembles the full material for the dashboard from one analysis pass: findings, git hotspots,
+// extraction seams, dependency cycles, cohesion groups, and any recorded history for the trend.
+export const assembleDashboardData = (
+  directory: string,
+  options: RunOptions,
+  collected: Pick<CollectedReport, 'report' | 'violations' | 'context'>,
+  live: boolean,
+): DashboardData => {
+  const churn = getChurn(directory, options.since ?? DEFAULT_SINCE)
+  const hotspots = churn ? computeHotspots(collected.report, churn) : []
+  const seams = collected.context ? computeSeams(collected.context.graph, findCommunities(collected.context.graph)) : []
+  const cycles = collected.context ? cyclesFromContext(collected.context) : []
+  const cohesion = collected.context ? cohesionFromContext(collected.context) : []
+  const historyPath = options.record ?? DEFAULT_HISTORY
+  const history = existsSync(historyPath) ? readHistory(historyPath) : []
+
+  return {
+    report: collected.report,
+    violations: collected.violations,
+    hotspots,
+    generatedAt: new Date().toISOString(),
+    live,
+    seams,
+    history,
+    cycles,
+    cohesion,
+  }
 }
 
 const saveBaseline = (options: RunOptions, report: MetricReport[]): RunReport => {
@@ -85,27 +117,22 @@ const runBaseline = (options: RunOptions, report: MetricReport[], violations: Ru
   return result
 }
 
-const gatherHotspots = (directory: string, report: MetricReport[]): Hotspot[] => {
-  const churn = getChurn(directory, DEFAULT_SINCE)
-  return churn ? computeHotspots(report, churn) : []
-}
-
-const writeReports = (directory: string, options: RunOptions, report: MetricReport[], violations: RuleViolation[]): void => {
+const writeReports = (directory: string, options: RunOptions, collected: CollectedReport): void => {
   if (options.sarif) {
-    writeFileSync(options.sarif, JSON.stringify(buildSarif(report, violations), null, 2))
+    writeFileSync(options.sarif, JSON.stringify(buildSarif(collected.report, collected.violations), null, 2))
     if (!options.json) console.log(`✓ SARIF written to ${options.sarif}`)
   }
   if (options.html) {
-    const hotspots = gatherHotspots(directory, report)
-    writeFileSync(options.html, buildDashboard({ report, violations, hotspots, generatedAt: new Date().toISOString(), live: false }))
+    writeFileSync(options.html, buildDashboard(assembleDashboardData(directory, options, collected, false)))
     if (!options.json) console.log(`✓ HTML dashboard written to ${options.html}`)
   }
 }
 
 export const runLens = async (directory = process.cwd(), options: RunOptions = {}): Promise<RunReport> => {
-  const { report, blocks, worstSeverity, violations } = await collectReport(directory)
+  const collected = await collectReport(directory)
+  const { report, blocks, worstSeverity, violations } = collected
 
-  writeReports(directory, options, report, violations)
+  writeReports(directory, options, collected)
 
   if (options.record) {
     appendSnapshot(options.record, buildSnapshot(report, violations, getCurrentCommit(directory), new Date().toISOString()))

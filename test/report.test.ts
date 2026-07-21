@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildSarif } from '../src/helpers/sarif.helpers'
-import { buildDashboard } from '../src/helpers/report.dashboard'
+import { buildDashboard, buildDashboardModel } from '../src/helpers/report.dashboard'
 import { MetricReport, RuleViolation } from '../src/types/config.interface'
 
 const dashboard = (report: MetricReport[], violations: RuleViolation[], live = false) =>
@@ -42,26 +42,42 @@ describe('buildSarif', () => {
   })
 })
 
+describe('buildDashboardModel', () => {
+  it('summarises findings into KPIs and per-metric counts', () => {
+    const model = buildDashboardModel({ report, violations, hotspots: [], generatedAt: '2026-01-01T00:00:00Z', live: false })
+
+    expect(model.failed).toBe(true) // a CRITICAL and a violation
+    expect(model.kpis).toMatchObject({ criticals: 1, warnings: 0, violations: 1, metrics: 1 })
+    expect(model.metrics[0]).toMatchObject({ name: 'wmc', critical: 1, warning: 0 })
+    expect(model.metrics[0].entries).toHaveLength(2) // OK classes are kept for the distribution view
+  })
+
+  it('is healthy when nothing crosses a threshold', () => {
+    const model = buildDashboardModel({ report: [{ metric: 'wmc', summary, classes: [{ value: 'Ok', total: 1, label: 'OK', file: 'x.ts' }] }], violations: [], hotspots: [], generatedAt: 'now', live: false })
+
+    expect(model.failed).toBe(false)
+  })
+})
+
 describe('buildDashboard', () => {
-  it('renders a self-contained dashboard with KPIs and the flagged findings', () => {
+  it('renders a self-contained page that embeds the model and the flagged findings', () => {
     const html = dashboard(report, violations)
 
     expect(html.startsWith('<!doctype html>')).toBe(true)
-    expect(html).toContain('artie-lens')
-    expect(html).toContain('Worst offenders')
-    expect(html).toContain('OrderService')
-    expect(html).toContain('Architecture violations')
-    expect(html).toContain('needs attention') // failed status because there is a CRITICAL and a violation
+    expect(html).toContain('window.__ARTIE__=')
+    expect(html).toContain('artie')
+    expect(html).toContain('OrderService') // present in the embedded model
+    expect(html).toContain('src/infra/b.ts') // the violation target
+    expect(html).toContain('"failed":true')
   })
 
-  it('shows a healthy status and no live script when clean and not live', () => {
+  it('omits the live channel when not live', () => {
     const html = dashboard([{ metric: 'wmc', summary, classes: [{ value: 'Ok', total: 1, label: 'OK', file: 'x.ts' }] }], [])
 
-    expect(html).toContain('healthy')
     expect(html).not.toContain('EventSource')
   })
 
-  it('injects the live-reload script when live', () => {
+  it('injects the live channel when live', () => {
     expect(dashboard(report, violations, true)).toContain('EventSource')
   })
 })

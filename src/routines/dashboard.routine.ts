@@ -2,10 +2,8 @@ import { createServer, ServerResponse } from 'http'
 import { watch } from 'chokidar'
 
 import { RunOptions } from '../types/config.interface'
-import { DEFAULT_SINCE, getChurn } from '../helpers/git.helpers'
-import { computeHotspots } from '../helpers/hotspot.helpers'
-import { buildDashboard } from '../helpers/report.dashboard'
-import { collectReport } from './run.routine'
+import { buildDashboard, buildDashboardModel } from '../helpers/report.dashboard'
+import { assembleDashboardData, collectReport } from './run.routine'
 
 const DEFAULT_PORT = 4300
 const WATCH_DEBOUNCE_MS = 300
@@ -16,12 +14,12 @@ export const dashboardLens = async (directory = process.cwd(), options: RunOptio
   let html = ''
 
   const render = async (): Promise<void> => {
-    const { report, violations } = await collectReport(directory)
-    const churn = getChurn(directory, DEFAULT_SINCE)
-    const hotspots = churn ? computeHotspots(report, churn) : []
+    const collected = await collectReport(directory)
+    const data = assembleDashboardData(directory, options, collected, true)
 
-    html = buildDashboard({ report, violations, hotspots, generatedAt: new Date().toISOString(), live: true })
-    for (const client of clients) client.write('data: update\n\n')
+    html = buildDashboard(data)
+    const payload = JSON.stringify(buildDashboardModel(data))
+    for (const client of clients) client.write(`data: ${payload}\n\n`)
   }
 
   await render()

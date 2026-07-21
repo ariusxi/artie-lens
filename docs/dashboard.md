@@ -19,6 +19,14 @@ Every table is sortable (click a header) and filterable (the search box). Click 
 file to open a drill-down drawer with that file's full metric profile, findings, and cohesion
 groups.
 
+## Theme and language
+
+The top bar has a light/dark toggle and a language selector, both persisted in the browser
+(`localStorage`). The theme defaults to the operating-system preference and the language to the
+browser's, falling back to English. Ten languages ship in the page (English, Chinese, Hindi,
+Spanish, French, Arabic, Bengali, Portuguese, Russian, Japanese); Arabic renders right-to-left.
+Everything is embedded, so switching either is instant and works offline.
+
 ## Static HTML
 
 `artie run --html[=FILE]` writes the self-contained dashboard to a file, so it opens anywhere

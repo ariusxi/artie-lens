@@ -116,11 +116,11 @@ tr[data-sev=WARNING] td:first-child{box-shadow:inset 2px 0 var(--warn)}
 .hist .col .fill.warm{background:var(--warn)}
 .hist .col small{color:var(--muted);font-size:10px;white-space:nowrap}
 .hist .col .n{color:var(--dim);font-size:10px;font-variant-numeric:tabular-nums}
-.tree{display:flex;flex-wrap:wrap;gap:2px}
-.cell{position:relative;border-radius:3px;overflow:hidden;padding:6px 8px;color:#06090d;min-width:44px}
+.tree{position:relative;width:100%;aspect-ratio:5/3}
+.cell{position:absolute;overflow:hidden;padding:4px 6px;color:#06090d;border:1px solid var(--panel);box-sizing:border-box;cursor:pointer}
 .cell.OK{background:var(--ok)}.cell.WARNING{background:var(--warn)}.cell.CRITICAL{background:var(--crit)}
-.cell .nm{font-size:10px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cell .sc{font-size:10px;opacity:.85}
+.cell .nm{font-size:10px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
+.cell .sc{font-size:9px;opacity:.85;white-space:nowrap}
 .viol{list-style:none;margin:0;padding:0}
 .viol li{padding:9px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
 .viol code{color:var(--fg);background:var(--bg);padding:2px 6px;border-radius:3px;font-size:11.5px}
@@ -215,15 +215,47 @@ function bars(){
   }).join('')+'</div>';
 }
 
+// Squarified treemap (Bruls, Huizing, van Wijk): rows are laid along the shorter free side and
+// each row's items greedily extend it while the worst aspect ratio keeps improving. Coordinates
+// come out in a fixed 5x3 space that the CSS box locks to, so tiles stay close to square.
+function squarify(items,W,H){
+  var total=0;items.forEach(function(it){total+=it.v;});
+  if(total<=0)return [];
+  var norm=(W*H)/total;
+  var areas=items.map(function(it){return it.v*norm;});
+  var out=[];var free={x:0,y:0,w:W,h:H};var idx=0;
+  function worst(row,side){var s=0,mx=-Infinity,mn=Infinity;for(var i=0;i<row.length;i++){var a=row[i];s+=a;if(a>mx)mx=a;if(a<mn)mn=a;}var s2=s*s,l2=side*side;return Math.max(l2*mx/s2,s2/(l2*mn));}
+  while(idx<items.length){
+    var side=Math.min(free.w,free.h);
+    var row=[];var rowItems=[];
+    while(idx<items.length){
+      var cand=row.concat([areas[idx]]);
+      if(row.length&&worst(cand,side)>worst(row,side))break;
+      row.push(areas[idx]);rowItems.push(items[idx]);idx++;
+    }
+    var sum=0;row.forEach(function(a){sum+=a;});
+    if(free.w<=free.h){
+      var th=sum/free.w;var px=free.x;
+      for(var i=0;i<row.length;i++){var len=row[i]/th;out.push({ref:rowItems[i],x:px,y:free.y,w:len,h:th});px+=len;}
+      free.y+=th;free.h-=th;
+    }else{
+      var tv=sum/free.h;var py=free.y;
+      for(var j=0;j<row.length;j++){var l2=row[j]/tv;out.push({ref:rowItems[j],x:free.x,y:py,w:tv,h:l2});py+=l2;}
+      free.x+=tv;free.w-=tv;
+    }
+  }
+  return out;
+}
 function treemap(){
-  var hs=M.hotspots.filter(function(h){return h.churn>0;}).slice(0,48);
+  var hs=M.hotspots.filter(function(h){return h.churn>0;}).sort(function(a,b){return b.churn-a.churn;}).slice(0,40);
   if(!hs.length)return '<div class="empty"><b>'+esc(t('nothing_on_fire'))+'</b>'+esc(t('no_churn_sub'))+'</div>';
-  var max=Math.max.apply(null,hs.map(function(h){return h.churn;}));
+  var W=150,H=90;
+  var rects=squarify(hs.map(function(h){return {v:h.churn,h:h};}),W,H);
   var sev=function(h){return h.badness>=3?'CRITICAL':h.badness>=1?'WARNING':'OK';};
-  return '<div class="body"><div class="tree">'+hs.map(function(h){
-    var scale=0.5+h.churn/max;var basis=(44*scale).toFixed(0);
-    return '<div class="cell '+sev(h)+'" data-file="'+esc(h.file)+'" style="flex:'+h.churn.toFixed(2)+' 1 '+basis+'px;height:'+(30+scale*34).toFixed(0)+'px" title="'+esc(h.file)+' · '+h.churn+'× '+esc(t('col_churn'))+' · '+esc(t('col_score'))+' '+h.score+'">'+
-      '<div class="nm">'+esc(baseName(h.file))+'</div><div class="sc">'+h.churn+'× · '+h.score+'</div></div>';
+  return '<div class="body"><div class="tree">'+rects.map(function(r){
+    var h=r.ref.h;var big=r.w>18&&r.h>14;
+    return '<div class="cell '+sev(h)+'" data-file="'+esc(h.file)+'" style="left:'+(r.x/W*100).toFixed(3)+'%;top:'+(r.y/H*100).toFixed(3)+'%;width:'+(r.w/W*100).toFixed(3)+'%;height:'+(r.h/H*100).toFixed(3)+'%" title="'+esc(h.file)+' · '+h.churn+'× '+esc(t('col_churn'))+' · '+esc(t('col_score'))+' '+h.score+'">'+
+      '<div class="nm">'+esc(baseName(h.file))+'</div>'+(big?'<div class="sc">'+h.churn+'× · '+h.score+'</div>':'')+'</div>';
   }).join('')+'</div></div>';
 }
 

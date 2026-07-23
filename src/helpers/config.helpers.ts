@@ -1,5 +1,5 @@
 import path from 'path'
-import { existsSync } from 'fs'
+import { existsSync, writeFileSync } from 'fs'
 
 import { ArtieConfig, MetricConfig, MetricInsights, MetricResult, RunOptions } from '../types/config.interface'
 
@@ -7,8 +7,10 @@ import { readFileContent } from './file.helpers'
 import { DEFAULT_BASELINE } from './baseline.helpers'
 import { DEFAULT_HISTORY } from './trend.helpers'
 
+export const getConfigPath = (): string => path.resolve(process.cwd(), '.artierc.json')
+
 export const readConfig = (): ArtieConfig => {
-  const filePath = path.resolve(process.cwd(), '.artierc.json')
+  const filePath = getConfigPath()
   if (!existsSync(filePath)) throw new Error('No .artierc.json found in this directory. Run `artie init` first.')
 
   const content = readFileContent(filePath)
@@ -17,6 +19,21 @@ export const readConfig = (): ArtieConfig => {
   } catch {
     throw new Error('.artierc.json is not valid JSON.')
   }
+}
+
+// A written config must at least carry the metrics map the rest of the pipeline reads, so the
+// dashboard editor cannot persist a shape that would break the next analysis.
+export const assertConfigShape = (config: unknown): ArtieConfig => {
+  const candidate = config as ArtieConfig
+  if (!candidate || typeof candidate !== 'object') throw new Error('Config must be an object.')
+  if (!candidate.options || typeof candidate.options !== 'object') throw new Error('Config is missing "options".')
+  if (!candidate.options.metrics || typeof candidate.options.metrics !== 'object') throw new Error('Config is missing "options.metrics".')
+
+  return candidate
+}
+
+export const writeConfig = (config: ArtieConfig): void => {
+  writeFileSync(getConfigPath(), `${JSON.stringify(config, null, 2)}\n`)
 }
 
 const BOOLEAN_FLAGS: Record<string, (options: RunOptions) => void> = {

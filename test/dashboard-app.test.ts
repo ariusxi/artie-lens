@@ -24,9 +24,15 @@ const hotspots: Hotspot[] = [
   { file: 'src/pay.ts', churn: 4, badness: 1, score: 4, findings: ['WMC WARNING PayService (12)'] },
   { file: 'src/misc.ts', churn: 2, badness: 1, score: 2, findings: ['CBO WARNING Misc (9)'] },
 ]
+const cycles = [{ size: 3, path: ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/a.ts'] }]
+const config = {
+  options: { defaultThresholds: { warning: 5, critical: 10, levels: ['WARNING', 'CRITICAL'] }, metrics: { wmc: { enabled: true, warning: 4, critical: 8 }, cbo: { enabled: true } } },
+  includes: ['**/*.ts'],
+  excludes: ['node_modules'],
+}
 
 const boot = (overrides: Partial<DashboardData> = {}): JSDOM => {
-  const html = buildDashboard({ report, violations, hotspots, generatedAt: '2026-01-01T00:00:00Z', live: false, ...overrides })
+  const html = buildDashboard({ report, violations, hotspots, cycles, config, generatedAt: '2026-01-01T00:00:00Z', live: false, ...overrides })
   return new JSDOM(html, { runScripts: 'dangerously', url: 'https://artie.test/' })
 }
 
@@ -34,7 +40,7 @@ describe('dashboard client app', () => {
   it('renders header, six tabs and KPIs from the embedded model', () => {
     const doc = boot().window.document
 
-    expect(doc.querySelectorAll('.tab')).toHaveLength(6)
+    expect(doc.querySelectorAll('.tab')).toHaveLength(7)
     expect(doc.querySelector('.pill')!.textContent).toContain('fail') // a CRITICAL and a violation
     expect(doc.querySelector('.kpi .val')!.textContent).toBe('1') // criticals KPI is first
     expect(doc.body.textContent).toContain('OrderService')
@@ -106,5 +112,45 @@ describe('dashboard client app', () => {
 
   it('omits the live channel when not live', () => {
     expect(boot({ live: false }).window.document.documentElement.outerHTML).not.toContain('EventSource')
+  })
+
+  it('draws each dependency cycle as a node-link graph', () => {
+    const doc = boot().window.document
+    const violationsTab = [...doc.querySelectorAll('.tab')].find((tab) => /Violations/.test(tab.textContent ?? ''))!
+
+    ;(violationsTab as HTMLElement).click()
+
+    const graph = doc.querySelector('.cyc svg')!
+    expect(graph).toBeTruthy()
+    // three unique files in the cycle become three clickable nodes
+    expect(graph.querySelectorAll('g[data-file]')).toHaveLength(3)
+    expect(graph.querySelectorAll('path[marker-end]').length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('renders the config form from the embedded config', () => {
+    const doc = boot().window.document
+    ;(doc.querySelector('[data-tab="config"]') as HTMLElement).click()
+
+    expect(doc.querySelectorAll('tr[data-cfg-metric]')).toHaveLength(2) // wmc, cbo
+    expect((doc.querySelector('[data-cfg="includes"]') as HTMLTextAreaElement).value).toBe('**/*.ts')
+    expect(doc.querySelector('[data-process]')).toBeNull() // no Process button when not live
+    expect(doc.body.textContent).toContain('artie dashboard') // the live-only note
+  })
+
+  it('shows the skeleton and posts the edited config when processing (live)', async () => {
+    const dom = boot({ live: true })
+    const doc = dom.window.document
+    let posted: any = null
+    ;(dom.window as any).fetch = (url: string, init: any) => { posted = { url, init }; return Promise.resolve({ ok: true, status: 204 }) }
+
+    ;(doc.querySelector('[data-tab="config"]') as HTMLElement).click()
+    ;(doc.querySelector('tr[data-cfg-metric="wmc"] [data-k="warning"]') as HTMLInputElement).value = '3'
+    ;(doc.querySelector('[data-process]') as HTMLElement).click()
+
+    expect(doc.querySelector('.sk')).toBeTruthy() // skeleton is shown while analyzing
+    expect(posted.url).toBe('/config')
+    expect(posted.init.method).toBe('POST')
+    const sent = JSON.parse(posted.init.body)
+    expect(sent.options.metrics.wmc.warning).toBe(3) // the edited value was collected
   })
 })

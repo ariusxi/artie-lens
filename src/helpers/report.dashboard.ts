@@ -1,4 +1,4 @@
-import { Hotspot, MetricReport, MetricResult, RuleViolation, Seam, Snapshot } from '../types/config.interface'
+import { ArtieConfig, Hotspot, MetricReport, MetricResult, RuleViolation, Seam, Snapshot } from '../types/config.interface'
 import { CohesionSuggestion, CycleSuggestion } from './suggest.helpers'
 import { DashboardMetric, DashboardModel, renderDashboard } from '../templates/dashboard.template'
 
@@ -12,6 +12,7 @@ export interface DashboardData {
   history?: Snapshot[]
   cycles?: CycleSuggestion[]
   cohesion?: CohesionSuggestion[]
+  config?: ArtieConfig | null
 }
 
 const countBy = (classes: MetricResult[], label: string): number => classes.filter((item) => item.label === label).length
@@ -41,6 +42,7 @@ export const buildDashboardModel = (data: DashboardData): DashboardModel => {
     history: data.history ?? [],
     cycles: data.cycles ?? [],
     cohesion: data.cohesion ?? [],
+    config: data.config ?? null,
   }
 }
 

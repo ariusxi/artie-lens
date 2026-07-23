@@ -1,4 +1,4 @@
-import { MetricInsights, MetricReport, MetricResult, RuleViolation, RunOptions, RunReport } from '../types/config.interface'
+import { ArtieConfig, MetricInsights, MetricReport, MetricResult, RuleViolation, RunOptions, RunReport } from '../types/config.interface'
 import { AnalysisContext, buildAnalysisContext, metricRegistry, severityRank } from '../helpers/metric.helpers'
 import { getEnableMetrics, getMetricIndexes, readConfig, resolveMetricConfig } from '../helpers/config.helpers'
 import { computeRegressions, readBaseline, writeBaseline } from '../helpers/baseline.helpers'
@@ -67,6 +67,7 @@ export const assembleDashboardData = (
   const cohesion = collected.context ? cohesionFromContext(collected.context) : []
   const historyPath = options.record ?? DEFAULT_HISTORY
   const history = existsSync(historyPath) ? readHistory(historyPath) : []
+  const config = readConfigSafe()
 
   return {
     report: collected.report,
@@ -78,6 +79,15 @@ export const assembleDashboardData = (
     history,
     cycles,
     cohesion,
+    config,
+  }
+}
+
+const readConfigSafe = (): ArtieConfig | null => {
+  try {
+    return readConfig()
+  } catch {
+    return null
   }
 }
 

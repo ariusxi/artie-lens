@@ -13,11 +13,24 @@ network calls and nothing to install in the browser.
 | Hotspots | Files ranked by complexity crossed with git churn |
 | Modules | Findings rolled up by top-level directory |
 | Seams | Cohesive clusters ranked as extraction candidates |
-| Violations | Architecture-rule breaches and dependency cycles |
+| Violations | Architecture-rule breaches, plus each dependency cycle drawn as a node-link graph |
+| Config | The `.artierc.json` configuration as an editable form (live dashboard only) |
 
 Every table is sortable (click a header) and filterable (the search box). Click any row with a
 file to open a drill-down drawer with that file's full metric profile, findings, and cohesion
 groups.
+
+Dependency cycles are rendered as graphs: the files sit on a ring with curved directional arrows
+following the import path, so the loop is visible at a glance. Click any node to drill into it.
+
+## Editing the configuration
+
+On the live dashboard, the Config tab shows `.artierc.json` as a form: per-metric enabled toggles
+and warning/critical thresholds, the default thresholds, the include/exclude globs, and the
+`ignore re-exports` switch. Press **Process** and the server writes the file, re-analyzes, and
+streams the new model back; a skeleton state covers the dashboard while it runs. If the edited
+configuration cannot be analyzed, the previous file is restored so a bad edit never breaks the
+server. In the static HTML export the form is read-only, since reprocessing needs the server.
 
 ## Theme and language
 

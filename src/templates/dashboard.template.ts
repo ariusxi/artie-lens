@@ -1,4 +1,4 @@
-import { Hotspot, MetricResult, RuleViolation, Seam, Snapshot } from '../types/config.interface'
+import { ArtieConfig, Hotspot, MetricResult, RuleViolation, Seam, Snapshot } from '../types/config.interface'
 import { DICTIONARY, LANGUAGES } from './i18n'
 
 export interface DashboardMetric {
@@ -20,6 +20,7 @@ export interface DashboardModel {
   history: Snapshot[]
   cycles: { size: number; path: string[] }[]
   cohesion: { value: string; groups: { methods: string[]; variables: string[] }[] }[]
+  config: ArtieConfig | null
 }
 
 // Anything embedded in a <script> tag could close it early with a stray `<`, so escape it to a
@@ -150,7 +151,36 @@ footer{color:var(--muted);font-size:11px;text-align:center;padding:24px}
 .grp .t{color:var(--muted);font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .18s;z-index:39}
 .scrim.on{opacity:1;pointer-events:auto}
-@media(max-width:640px){.path{max-width:150px}.barrow{grid-template-columns:56px 1fr}.barrow .ct{grid-column:1/-1;text-align:start}}
+.cycwrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.cyc{border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--bg)}
+.cyc .cap{font-size:10.5px;color:var(--muted);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cyc svg text{cursor:pointer}
+.cyc g[data-file]:hover circle{r:6.5}
+.fnum{width:76px;background:var(--bg);border:1px solid var(--line-2);color:var(--fg);font:inherit;font-size:12px;padding:5px 7px;border-radius:4px;text-align:end}
+.fnum:focus,.ftext:focus{outline:none;border-color:var(--accent-dim)}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;vertical-align:middle}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+.fld em{color:var(--muted);font-style:normal;text-transform:none;letter-spacing:0}
+.ftext{min-height:104px;background:var(--panel-2);border:1px solid var(--line-2);color:var(--fg);font-family:var(--mono);font-size:12px;padding:9px;border-radius:5px;resize:vertical;white-space:pre;line-height:1.6}
+.frow{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:12px;color:var(--dim)}
+.frow input[type=checkbox]{margin-inline-end:2px}
+.fbtn{background:var(--accent);color:#06090d;border:0;font:inherit;font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:9px 20px;border-radius:5px;cursor:pointer}
+.fbtn:hover{filter:brightness(1.08)}
+.fbtn:disabled{opacity:.5;cursor:default}
+.faction{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.fnote{color:var(--muted);font-size:12px}
+.fok{color:var(--ok);font-size:11.5px}
+.ferr{color:var(--crit);font-size:11.5px}
+.proc{display:flex;align-items:center;gap:9px;color:var(--accent);font-size:12px;letter-spacing:.04em;margin-bottom:12px}
+.proc .sp{width:12px;height:12px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{100%{transform:rotate(360deg)}}
+.sk{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.sk .sh{position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--fg) 8%,transparent),transparent);animation:shimmer 1.25s infinite}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+.sk-kpi{height:88px}
+.sk-panel{height:260px}
+@media(max-width:640px){.path{max-width:150px}.barrow{grid-template-columns:56px 1fr}.barrow .ct{grid-column:1/-1;text-align:start}.fgrid{grid-template-columns:1fr}}
 `
 
 // The client app is inert data until this runs. It reads window.__ARTIE__ (the model) and
@@ -163,7 +193,7 @@ var app=document.getElementById('app');
 var I18N=window.__I18N__||{dict:{en:{}},langs:[{code:'en',name:'English'}]};
 var DICT=I18N.dict;var LANGS=I18N.langs;
 var SEVW={CRITICAL:3,WARNING:2,OK:1};
-var state={tab:'overview',metric:null,sort:{},drawer:null};
+var state={tab:'overview',metric:null,sort:{},drawer:null,processing:false,cfgSaved:false,cfgError:'',awaitingConfig:false};
 var MOON='<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" fill="currentColor"/></svg>';
 var SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>';
 
@@ -386,12 +416,101 @@ function seamsTab(){
   return '<div class="panel"><h2>'+esc(t('tab_seams'))+' <span class="sub">'+esc(t('seams_sub'))+'</span></h2>'+tbl+'</div>';
 }
 
+// A dependency cycle drawn as the ring it is: nodes evenly on a circle, curved directed arrows
+// following the import path, so the loop is literally visible. Clicking a node drills into it.
+function cycleGraph(cycle,gid){
+  var nodes=cycle.path.slice();
+  if(nodes.length>1&&nodes[0]===nodes[nodes.length-1])nodes=nodes.slice(0,-1);
+  var n=nodes.length;var W=280,H=Math.max(190,120+n*14),cx=W/2,cy=H/2,R=Math.min(W,H)/2-52;
+  var by={};var pos=nodes.map(function(f,i){var a=-Math.PI/2+i*2*Math.PI/n;var p={x:cx+R*Math.cos(a),y:cy+R*Math.sin(a),f:f};by[f]=p;return p;});
+  var arrows='';
+  for(var i=0;i<cycle.path.length-1;i++){
+    var a=by[cycle.path[i]],b=by[cycle.path[i+1]];if(!a||!b)continue;
+    var dx=b.x-a.x,dy=b.y-a.y,len=Math.sqrt(dx*dx+dy*dy)||1,ux=dx/len,uy=dy/len,r=7;
+    var x1=(a.x+ux*r).toFixed(1),y1=(a.y+uy*r).toFixed(1),x2=(b.x-ux*r).toFixed(1),y2=(b.y-uy*r).toFixed(1);
+    var mx=((a.x+b.x)/2-uy*16).toFixed(1),my=((a.y+b.y)/2+ux*16).toFixed(1);
+    arrows+='<path d="M'+x1+' '+y1+' Q'+mx+' '+my+' '+x2+' '+y2+'" fill="none" stroke="var(--warn)" stroke-width="1.4" marker-end="url(#ah'+gid+')"/>';
+  }
+  var dots=pos.map(function(p){
+    var right=p.x>cx+4,left=p.x<cx-4;var anchor=left?'end':right?'start':'middle';
+    var lx=(left?p.x-9:right?p.x+9:p.x).toFixed(1);var ly=(p.y+(p.y<cy?-10:17)).toFixed(1);
+    return '<g data-file="'+esc(p.f)+'"><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="5" fill="var(--accent)"/>'+
+      '<text x="'+lx+'" y="'+ly+'" text-anchor="'+anchor+'" fill="var(--dim)" font-size="10">'+esc(baseName(p.f))+'</text></g>';
+  }).join('');
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:'+W+'px;height:auto"><defs><marker id="ah'+gid+'" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0L6 3L0 6z" fill="var(--warn)"/></marker></defs>'+arrows+dots+'</svg>';
+}
+
 function violationsTab(){
   if(!M.violations.length&&!M.cycles.length)return '<div class="panel"><div class="empty"><b>'+esc(t('no_violations_title'))+'</b>'+esc(t('no_violations_sub'))+'</div></div>';
   var out='';
   if(M.violations.length)out+='<div class="panel"><h2>'+esc(t('arch_violations'))+'</h2><ul class="viol">'+M.violations.map(function(v){return '<li><code>'+esc(v.from)+'</code><span class="ar">→</span><code>'+esc(v.to)+'</code><span class="m">'+esc(v.message)+'</span></li>';}).join('')+'</ul></div>';
-  if(M.cycles.length)out+='<div class="panel" style="margin-top:12px"><h2>'+esc(t('dep_cycles'))+' <span class="sub">'+esc(t('n_found',{n:M.cycles.length}))+'</span></h2><ul class="viol">'+M.cycles.map(function(c){return '<li><span class="sev WARNING">'+c.size+'</span><span class="m">'+c.path.map(esc).join(' <span class="ar">→</span> ')+'</span></li>';}).join('')+'</ul></div>';
+  if(M.cycles.length)out+='<div class="panel" style="margin-top:12px"><h2>'+esc(t('dep_cycles'))+' <span class="sub">'+esc(t('n_found',{n:M.cycles.length}))+'</span></h2><div class="body"><div class="cycwrap">'+
+    M.cycles.map(function(c,i){var seq=c.path.slice(0,-1).map(baseName).join(' → ')+' → '+baseName(c.path[0]);return '<div class="cyc"><div class="cap" title="'+esc(seq)+'">'+esc(seq)+'</div>'+cycleGraph(c,i)+'</div>';}).join('')+
+    '</div></div></div>';
   return out;
+}
+
+function configTab(){
+  if(!M.config)return '<div class="panel"><div class="empty">'+esc(t('cfg_none'))+'</div></div>';
+  var o=M.config.options||{};var metrics=o.metrics||{};var dt=o.defaultThresholds||{};
+  var rows=Object.keys(metrics).map(function(name){var mc=metrics[name]||{};
+    return '<tr data-cfg-metric="'+esc(name)+'"><td>'+esc(name.toUpperCase())+'</td>'+
+      '<td class="num"><input type="checkbox" data-k="enabled"'+(mc.enabled?' checked':'')+'></td>'+
+      '<td class="num"><input class="fnum" type="number" data-k="warning" value="'+(mc.warning!=null?mc.warning:'')+'" placeholder="'+(dt.warning!=null?dt.warning:'')+'"></td>'+
+      '<td class="num"><input class="fnum" type="number" data-k="critical" value="'+(mc.critical!=null?mc.critical:'')+'" placeholder="'+(dt.critical!=null?dt.critical:'')+'"></td></tr>';
+  }).join('');
+  var metricsTable='<div class="scroll"><table><thead><tr><th class="plain">'+esc(t('col_metric'))+'</th><th class="plain num">'+esc(t('cfg_enabled'))+'</th><th class="plain num">'+esc(t('cfg_warning'))+'</th><th class="plain num">'+esc(t('cfg_critical'))+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="frow"><span class="mut">'+esc(t('cfg_defaults'))+'</span>'+
+      '<input class="fnum" type="number" data-cfg="defwarn" value="'+(dt.warning!=null?dt.warning:'')+'" aria-label="'+esc(t('cfg_warning'))+'">'+
+      '<input class="fnum" type="number" data-cfg="defcrit" value="'+(dt.critical!=null?dt.critical:'')+'" aria-label="'+esc(t('cfg_critical'))+'"></div>';
+  var scope='<div class="fgrid">'+
+    '<label class="fld"><span>'+esc(t('cfg_includes'))+' <em>'+esc(t('cfg_globs_hint'))+'</em></span><textarea class="ftext" data-cfg="includes">'+esc((M.config.includes||[]).join('\n'))+'</textarea></label>'+
+    '<label class="fld"><span>'+esc(t('cfg_excludes'))+' <em>'+esc(t('cfg_globs_hint'))+'</em></span><textarea class="ftext" data-cfg="excludes">'+esc((M.config.excludes||[]).join('\n'))+'</textarea></label>'+
+    '</div><label class="frow"><input type="checkbox" data-cfg="ignore"'+(o.ignoreReExports?' checked':'')+'><span>'+esc(t('cfg_ignore_reexports'))+'</span></label>';
+  var action=M.live
+    ?'<button class="fbtn" data-process>'+esc(t('cfg_process'))+'</button>'+(state.cfgSaved?'<span class="fok">'+esc(t('cfg_saved'))+'</span>':'')+(state.cfgError?'<span class="ferr">'+esc(t('cfg_error'))+': '+esc(state.cfgError)+'</span>':'')
+    :'<div class="fnote">'+esc(t('cfg_live_only'))+'</div>';
+  return '<div class="panel"><h2>'+esc(t('cfg_metrics_title'))+'</h2><div class="body">'+metricsTable+'</div></div>'+
+    '<div class="panel" style="margin-top:12px"><h2>'+esc(t('cfg_scope'))+'</h2><div class="body">'+scope+'</div></div>'+
+    '<div class="panel" style="margin-top:12px"><div class="body faction">'+action+'</div></div>';
+}
+
+function sk(cls){return '<div class="sk '+cls+'"><div class="sh"></div></div>';}
+function skeletonBody(){
+  return '<div class="proc"><span class="sp"></span>'+esc(t('cfg_processing'))+'</div>'+
+    '<div class="kpis">'+sk('sk-kpi')+sk('sk-kpi')+sk('sk-kpi')+sk('sk-kpi')+sk('sk-kpi')+'</div>'+
+    '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-top:12px">'+sk('sk-panel')+sk('sk-panel')+'</div>'+
+    '<div class="sk" style="margin-top:12px;height:300px"><div class="sh"></div></div>';
+}
+
+function collectConfigForm(){
+  var cfg=JSON.parse(JSON.stringify(M.config||{options:{metrics:{}}}));
+  cfg.options=cfg.options||{};cfg.options.metrics=cfg.options.metrics||{};
+  [].forEach.call(document.querySelectorAll('[data-cfg-metric]'),function(row){
+    var name=row.getAttribute('data-cfg-metric');var mc=cfg.options.metrics[name]||{};
+    mc.enabled=row.querySelector('[data-k=enabled]').checked;
+    var w=row.querySelector('[data-k=warning]').value,c=row.querySelector('[data-k=critical]').value;
+    if(w!=='')mc.warning=Number(w);else delete mc.warning;
+    if(c!=='')mc.critical=Number(c);else delete mc.critical;
+    cfg.options.metrics[name]=mc;
+  });
+  cfg.options.defaultThresholds=cfg.options.defaultThresholds||{};
+  var dw=document.querySelector('[data-cfg=defwarn]').value,dc=document.querySelector('[data-cfg=defcrit]').value;
+  if(dw!=='')cfg.options.defaultThresholds.warning=Number(dw);
+  if(dc!=='')cfg.options.defaultThresholds.critical=Number(dc);
+  var lines=function(sel){return document.querySelector(sel).value.split('\n').map(function(s){return s.trim();}).filter(Boolean);};
+  cfg.includes=lines('[data-cfg=includes]');cfg.excludes=lines('[data-cfg=excludes]');
+  cfg.options.ignoreReExports=document.querySelector('[data-cfg=ignore]').checked;
+  return cfg;
+}
+function processConfig(){
+  if(!M.live)return;
+  var cfg=collectConfigForm();
+  state.processing=true;state.awaitingConfig=true;state.cfgError='';state.cfgSaved=false;render();
+  var guard=setTimeout(function(){if(state.processing){state.processing=false;state.awaitingConfig=false;state.cfgError='timeout';render();}},25000);
+  fetch('/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)})
+    .then(function(r){if(r.ok)return;return r.json().then(function(e){throw new Error(e&&e.error?e.error:'HTTP '+r.status);});})
+    .catch(function(err){clearTimeout(guard);state.processing=false;state.awaitingConfig=false;state.cfgError=String(err&&err.message?err.message:err);render();});
 }
 
 var TABS=[
@@ -400,7 +519,8 @@ var TABS=[
   {id:'hotspots',view:hotspotsTab,count:function(){return M.hotspots.length;}},
   {id:'modules',view:modulesTab,count:function(){return rollupRows().length;}},
   {id:'seams',view:seamsTab,count:function(){return M.seams.length;}},
-  {id:'violations',view:violationsTab,count:function(){return M.violations.length+M.cycles.length;}}
+  {id:'violations',view:violationsTab,count:function(){return M.violations.length+M.cycles.length;}},
+  {id:'config',view:configTab,count:function(){return null;}}
 ];
 
 /* ---- drawer ---- */
@@ -433,7 +553,7 @@ function renderHeader(){
     '<div class="meta"><span id="stamp">'+esc(localDate(M.generatedAt))+'</span>'+renderControls()+'</div></div>';
 }
 function render(){
-  var body=(TABS.filter(function(tab){return tab.id===state.tab;})[0]||TABS[0]).view();
+  var body=state.processing?skeletonBody():(TABS.filter(function(tab){return tab.id===state.tab;})[0]||TABS[0]).view();
   app.innerHTML=renderHeader()+renderTabs()+'<div class="wrap">'+body+'</div>'+
     '<footer>artie-lens · '+esc(t('footer',{n:M.metrics.length,at:localDate(M.generatedAt)}))+'</footer>'+
     '<div class="scrim" id="scrim"></div>'+
@@ -459,9 +579,10 @@ function diff(oldM,newM){
 
 /* ---- events ---- */
 app.addEventListener('click',function(ev){
-  var el=ev.target.closest('[data-tab],[data-metric],[data-sort],[data-file],[data-close],[data-theme-toggle]');
+  var el=ev.target.closest('[data-tab],[data-metric],[data-sort],[data-file],[data-close],[data-theme-toggle],[data-process]');
   if(!el)return;
   if(el.hasAttribute('data-close')){closeDrawer();return;}
+  if(el.hasAttribute('data-process')){processConfig();return;}
   if(el.hasAttribute('data-theme-toggle')){theme=theme==='dark'?'light':'dark';localStorage.setItem('artie-theme',theme);applyChrome();render();return;}
   if(el.hasAttribute('data-tab')){state.tab=el.getAttribute('data-tab');changed={};render();return;}
   if(el.hasAttribute('data-metric')){state.metric=el.getAttribute('data-metric');render();return;}
@@ -481,7 +602,10 @@ app.addEventListener('input',function(ev){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
 document.addEventListener('click',function(e){if(e.target.id==='scrim')closeDrawer();});
 
-window.__artieApply=function(next){changed=diff(M,next);prev=M;M=next;reindex();render();};
+window.__artieApply=function(next){changed=diff(M,next);prev=M;M=next;reindex();
+  state.processing=false;
+  if(state.awaitingConfig){state.awaitingConfig=false;state.cfgSaved=true;setTimeout(function(){state.cfgSaved=false;},4000);}
+  render();};
 applyChrome();
 render();
 })();

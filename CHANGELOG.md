@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/ariusxi/artie-lens/compare/v1.18.1...v1.19.0) (2026-07-23)
+
+
+### Features
+
+* **dashboard:** cycle graphs and an editable config with live reprocess ([607ac6e](https://github.com/ariusxi/artie-lens/commit/607ac6ec5c76396ed7949564cf9d008ef28f3def))
+
 ## [1.18.1](https://github.com/ariusxi/artie-lens/compare/v1.18.0...v1.18.1) (2026-07-21)
 
 

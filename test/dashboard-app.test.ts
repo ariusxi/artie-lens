@@ -29,6 +29,10 @@ const deadCode = [
   { file: 'src/legacy.ts', name: 'oldHelper', kind: 'function', line: 12 },
   { file: 'src/legacy.ts', name: 'UnusedType', kind: 'interface', line: 30 },
 ]
+const risk = [
+  { file: 'src/order.ts', churn: 10, badness: 3, score: 30, coverage: 20, risk: 24, findings: [] },
+  { file: 'src/untested.ts', churn: 4, badness: 3, score: 12, coverage: null, risk: 12, findings: [] },
+]
 const config = {
   options: { defaultThresholds: { warning: 5, critical: 10, levels: ['WARNING', 'CRITICAL'] }, metrics: { wmc: { enabled: true, warning: 4, critical: 8 }, cbo: { enabled: true } } },
   includes: ['**/*.ts'],
@@ -36,7 +40,7 @@ const config = {
 }
 
 const boot = (overrides: Partial<DashboardData> = {}): JSDOM => {
-  const html = buildDashboard({ report, violations, hotspots, cycles, deadCode, config, generatedAt: '2026-01-01T00:00:00Z', live: false, ...overrides })
+  const html = buildDashboard({ report, violations, hotspots, cycles, deadCode, risk, hasCoverage: true, config, generatedAt: '2026-01-01T00:00:00Z', live: false, ...overrides })
   return new JSDOM(html, { runScripts: 'dangerously', url: 'https://artie.test/' })
 }
 
@@ -44,7 +48,7 @@ describe('dashboard client app', () => {
   it('renders header, six tabs and KPIs from the embedded model', () => {
     const doc = boot().window.document
 
-    expect(doc.querySelectorAll('.tab')).toHaveLength(8)
+    expect(doc.querySelectorAll('.tab')).toHaveLength(9)
     expect(doc.querySelector('.pill')!.textContent).toContain('fail') // a CRITICAL and a violation
     expect(doc.querySelector('.kpi .val')!.textContent).toBe('1') // criticals KPI is first
     expect(doc.body.textContent).toContain('OrderService')
@@ -129,6 +133,23 @@ describe('dashboard client app', () => {
     // three unique files in the cycle become three clickable nodes
     expect(graph.querySelectorAll('g[data-file]')).toHaveLength(3)
     expect(graph.querySelectorAll('path[marker-end]').length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('ranks hotspots by missing coverage in the risk tab', () => {
+    const doc = boot().window.document
+    ;(doc.querySelector('[data-tab="risk"]') as HTMLElement).click()
+
+    expect(doc.querySelector('.tab.on')!.textContent).toContain('Risk')
+    const first = doc.querySelector('#risk tbody tr')!
+    expect(first.textContent).toContain('src/order.ts') // highest risk first
+    expect(first.textContent).toContain('20%') // coverage rendered
+  })
+
+  it('prompts for a coverage report when none is available', () => {
+    const doc = boot({ hasCoverage: false, risk: [] }).window.document
+    ;(doc.querySelector('[data-tab="risk"]') as HTMLElement).click()
+
+    expect(doc.body.textContent).toContain('options.coverage')
   })
 
   it('lists unused exports in the dead code tab (static export embeds them)', () => {

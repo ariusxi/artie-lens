@@ -11,6 +11,7 @@ import { commentLens } from './routines/comment.routine'
 import { trendLens } from './routines/trend.routine'
 import { dashboardLens } from './routines/dashboard.routine'
 import { deadLens } from './routines/dead.routine'
+import { riskLens } from './routines/risk.routine'
 
 type Command = (directory: string | undefined, options: RunOptions) => void | Promise<void>
 
@@ -42,6 +43,7 @@ const commands: Record<string, Command> = {
   trend: (directory, options) => trendLens(directory, options),
   dashboard: (directory, options) => dashboardLens(directory, options),
   dead: (directory, options) => deadLens(directory, options),
+  risk: (directory, options) => riskLens(directory, options),
 }
 
 const main = async (args: string[]): Promise<void> => {

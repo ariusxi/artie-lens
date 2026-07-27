@@ -29,6 +29,16 @@ export interface Seam {
   crossing: number
 }
 
+export interface RiskItem {
+  file: string
+  churn: number
+  badness: number
+  score: number
+  coverage: number | null
+  risk: number
+  findings: string[]
+}
+
 export interface MetricInsights {
   total: number
   max: number
@@ -59,6 +69,7 @@ export interface ArtieConfig {
     metrics: Record<string, MetricConfig>
     ignoreReExports?: boolean
     deadCode?: { entries?: string[] }
+    coverage?: string
   }
 }
 
@@ -75,6 +86,7 @@ export interface RunOptions {
   html?: string
   record?: string
   port?: string
+  coverage?: string
 }
 
 export interface Snapshot {

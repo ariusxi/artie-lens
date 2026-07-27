@@ -82,6 +82,7 @@ Details, including the absolute gate and `--json` output, in **[docs/ci.md](./do
 - **[Hotspots](./docs/hotspots.md)** metrics crossed with git churn.
 - **[Seams](./docs/seams.md)** module communities as candidate extraction boundaries.
 - **[Dead code](./docs/dead-code.md)** exports that nothing imports anywhere.
+- **[Risk](./docs/risk.md)** hotspots weighted by missing test coverage.
 - **[Dashboard](./docs/dashboard.md)** static HTML report and a live, auto-refreshing server.
 - **[Continuous integration](./docs/ci.md)** CI gate, baseline/diff, GitHub Action.
 - **[Programmatic use](./docs/api.md)** the exported API.

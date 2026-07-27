@@ -1,4 +1,4 @@
-import { ArtieConfig, Hotspot, MetricReport, MetricResult, RuleViolation, Seam, Snapshot } from '../types/config.interface'
+import { ArtieConfig, Hotspot, MetricReport, MetricResult, RiskItem, RuleViolation, Seam, Snapshot } from '../types/config.interface'
 import { CohesionSuggestion, CycleSuggestion } from './suggest.helpers'
 import { DeadExport } from './dead.helpers'
 import { DashboardMetric, DashboardModel, renderDashboard } from '../templates/dashboard.template'
@@ -14,6 +14,8 @@ export interface DashboardData {
   cycles?: CycleSuggestion[]
   cohesion?: CohesionSuggestion[]
   deadCode?: DeadExport[]
+  risk?: RiskItem[]
+  hasCoverage?: boolean
   config?: ArtieConfig | null
 }
 
@@ -45,6 +47,8 @@ export const buildDashboardModel = (data: DashboardData): DashboardModel => {
     cycles: data.cycles ?? [],
     cohesion: data.cohesion ?? [],
     deadCode: data.deadCode ?? [],
+    risk: data.risk ?? [],
+    hasCoverage: data.hasCoverage ?? false,
     config: data.config ?? null,
   }
 }

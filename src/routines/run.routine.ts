@@ -10,6 +10,9 @@ import { computeHotspots } from '../helpers/hotspot.helpers'
 import { computeSeams, findCommunities } from '../helpers/seam.helpers'
 import { cohesionFromContext, cyclesFromContext } from '../helpers/suggest.helpers'
 import { findDeadExports } from '../helpers/dead.helpers'
+import { DEFAULT_COVERAGE, readCoverage } from '../helpers/coverage.helpers'
+import { computeRisk } from '../helpers/risk.helpers'
+import { resolve } from 'path'
 import { appendSnapshot, buildSnapshot, DEFAULT_HISTORY, readHistory } from '../helpers/trend.helpers'
 import { printMetricFiles, printMetricSummary, printRegressions, printViolations } from './report.printer'
 import { existsSync, writeFileSync } from 'fs'
@@ -71,6 +74,8 @@ export const assembleDashboardData = (
   // fetches it lazily from /dead when the tab is opened, so only the one-shot static export pays
   // for it here.
   const deadCode = !live && collected.context ? findDeadExports(collected.context, config?.options.deadCode?.entries ?? []) : []
+  const coverage = readCoverage(resolve(directory, options.coverage ?? config?.options.coverage ?? DEFAULT_COVERAGE), directory)
+  const risk = computeRisk(hotspots, coverage)
   const historyPath = options.record ?? DEFAULT_HISTORY
   const history = existsSync(historyPath) ? readHistory(historyPath) : []
 
@@ -85,6 +90,8 @@ export const assembleDashboardData = (
     cycles,
     cohesion,
     deadCode,
+    risk,
+    hasCoverage: coverage.size > 0,
     config,
   }
 }

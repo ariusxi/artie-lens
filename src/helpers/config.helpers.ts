@@ -6,6 +6,7 @@ import { ArtieConfig, MetricConfig, MetricInsights, MetricResult, RunOptions } f
 import { readFileContent } from './file.helpers'
 import { DEFAULT_BASELINE } from './baseline.helpers'
 import { DEFAULT_HISTORY } from './trend.helpers'
+import { DEFAULT_COVERAGE } from './coverage.helpers'
 
 export const getConfigPath = (): string => path.resolve(process.cwd(), '.artierc.json')
 
@@ -57,6 +58,7 @@ const VALUE_FLAGS: Record<string, ValueFlag> = {
   '--html': { set: (options, value) => { options.html = value }, default: 'artie-lens.html' },
   '--record': { set: (options, value) => { options.record = value }, default: DEFAULT_HISTORY },
   '--port': { set: (options, value) => { options.port = value } },
+  '--coverage': { set: (options, value) => { options.coverage = value }, default: DEFAULT_COVERAGE },
 }
 
 export const parseRunOptions = (flags: string[]): RunOptions => {

@@ -11,6 +11,7 @@ network calls and nothing to install in the browser.
 | Overview | KPI tiles (each with a trend sparkline from recorded history), issues-by-metric bars, a churn × severity hotspot treemap, and the worst offenders |
 | Metrics | Per-metric value distribution histogram plus a searchable, sortable table of every class or module |
 | Hotspots | Files ranked by complexity crossed with git churn |
+| Risk | Hotspots weighted by missing test coverage (needs an lcov report) |
 | Modules | Findings rolled up by top-level directory |
 | Seams | Cohesive clusters ranked as extraction candidates |
 | Violations | Architecture-rule breaches, plus each dependency cycle drawn as a node-link graph |

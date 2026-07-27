@@ -1,4 +1,4 @@
-import { ArtieConfig, Hotspot, MetricResult, RuleViolation, Seam, Snapshot } from '../types/config.interface'
+import { ArtieConfig, Hotspot, MetricResult, RiskItem, RuleViolation, Seam, Snapshot } from '../types/config.interface'
 import { DeadExport } from '../helpers/dead.helpers'
 import { DICTIONARY, LANGUAGES } from './i18n'
 
@@ -22,6 +22,8 @@ export interface DashboardModel {
   cycles: { size: number; path: string[] }[]
   cohesion: { value: string; groups: { methods: string[]; variables: string[] }[] }[]
   deadCode: DeadExport[]
+  risk: RiskItem[]
+  hasCoverage: boolean
   config: ArtieConfig | null
 }
 
@@ -182,6 +184,9 @@ input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:po
 @keyframes shimmer{100%{transform:translateX(100%)}}
 .sk-kpi{height:88px}
 .sk-panel{height:260px}
+.covbar{display:inline-block;width:60px;height:8px;background:var(--bg);border-radius:3px;overflow:hidden;vertical-align:middle;margin-inline-end:8px}
+.covbar .fill{display:block;height:100%}
+.covbar .fill.OK{background:var(--ok)}.covbar .fill.WARNING{background:var(--warn)}.covbar .fill.CRITICAL{background:var(--crit)}
 @media(max-width:640px){.path{max-width:150px}.barrow{grid-template-columns:56px 1fr}.barrow .ct{grid-column:1/-1;text-align:start}.fgrid{grid-template-columns:1fr}}
 `
 
@@ -310,7 +315,7 @@ function histogram(metric){
 
 /* ---- sortable + filterable table ---- */
 function table(id,cols,rows){
-  var s=state.sort[id]||{key:cols[0].key,dir:1};
+  var s=state.sort[id]||{key:cols[0].key,dir:cols[0].num?-1:1};
   var sorted=rows.slice().sort(function(a,b){
     var col=cols.filter(function(c){return c.key===s.key;})[0]||cols[0];
     var av=col.sortVal?col.sortVal(a):a[s.key],bv=col.sortVal?col.sortVal(b):b[s.key];
@@ -395,6 +400,24 @@ function hotspotsTab(){
   return '<div class="panel"><h2>'+esc(t('tab_hotspots'))+' <span class="sub">'+esc(t('hotspots_sub'))+'</span></h2>'+toolbar('hs')+tbl+'</div>';
 }
 
+function covCell(pct){
+  if(pct===null||pct===undefined)return '<span class="mut">'+esc(t('cov_none'))+'</span>';
+  var tone=pct>=80?'OK':pct>=50?'WARNING':'CRITICAL';
+  return '<span class="covbar"><span class="fill '+tone+'" style="width:'+pct.toFixed(0)+'%"></span></span><span class="sev '+tone+'">'+pct.toFixed(0)+'%</span>';
+}
+function riskTab(){
+  if(!M.hasCoverage)return '<div class="panel"><div class="empty"><b>'+esc(t('no_coverage_title'))+'</b>'+esc(t('no_coverage_sub'))+'</div></div>';
+  var rows=M.risk.map(function(r){return {risk:r.risk,file:r.file,churn:r.churn,score:r.score,badness:r.badness,coverage:r.coverage,_file:r.file};});
+  if(!rows.length)return '<div class="panel"><div class="empty"><b>'+esc(t('clean'))+'</b>'+esc(t('no_risk'))+'</div></div>';
+  var tbl=table('risk',[
+    {key:'risk',label:t('col_risk'),num:true,cls:'num',cell:function(r){var tone=(r.coverage!==null&&r.coverage>=80)?'OK':r.badness>=3?'CRITICAL':'WARNING';return '<b class="sev '+tone+'">'+r.risk+'</b>';}},
+    {key:'file',label:t('col_file'),cell:function(r){return '<span class="path" dir="rtl" title="'+esc(r.file)+'">'+esc(r.file)+'</span>';}},
+    {key:'coverage',label:t('col_coverage'),sortVal:function(r){return r.coverage===null?-1:r.coverage;},cell:function(r){return covCell(r.coverage);}},
+    {key:'churn',label:t('col_churn'),num:true,cls:'num mut',cell:function(r){return r.churn+'×';}},
+    {key:'score',label:t('col_score'),num:true,cls:'num mut',cell:function(r){return r.score;}}
+  ],rows);
+  return '<div class="panel"><h2>'+esc(t('tab_risk'))+' <span class="sub">'+esc(t('risk_sub'))+'</span></h2>'+toolbar('risk')+tbl+'</div>';
+}
 function modulesTab(){
   var rows=rollupRows();
   if(!rows.length)return '<div class="panel"><div class="empty"><b>'+esc(t('clean'))+'</b>'+esc(t('no_rollup'))+'</div></div>';
@@ -547,6 +570,7 @@ var TABS=[
   {id:'overview',view:overview,count:function(){return null;}},
   {id:'metrics',view:metricsTab,count:function(){return M.metrics.length;}},
   {id:'hotspots',view:hotspotsTab,count:function(){return M.hotspots.length;}},
+  {id:'risk',view:riskTab,count:function(){return M.hasCoverage?M.risk.length:null;}},
   {id:'modules',view:modulesTab,count:function(){return rollupRows().length;}},
   {id:'seams',view:seamsTab,count:function(){return M.seams.length;}},
   {id:'violations',view:violationsTab,count:function(){return M.violations.length+M.cycles.length;}},

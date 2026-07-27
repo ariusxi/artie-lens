@@ -124,6 +124,14 @@ const en: Dictionary = {
   col_kind: 'kind',
   col_line: 'line',
   dead_hint: 'Public API? List those files under options.deadCode.entries.',
+  tab_risk: 'Risk',
+  risk_sub: 'hotspots weighted by missing coverage',
+  no_risk: 'No risky hotspots.',
+  no_coverage_title: 'No coverage report',
+  no_coverage_sub: 'Point options.coverage at an lcov file (e.g. coverage/lcov.info).',
+  col_coverage: 'coverage',
+  col_risk: 'risk',
+  cov_none: 'none',
 }
 
 const zh: Dictionary = {
@@ -226,6 +234,14 @@ const zh: Dictionary = {
   col_kind: '类型',
   col_line: '行',
   dead_hint: '属于公共 API？把这些文件列入 options.deadCode.entries。',
+  tab_risk: '风险',
+  risk_sub: '按缺失覆盖率加权的热点',
+  no_risk: '没有高风险热点。',
+  no_coverage_title: '没有覆盖率报告',
+  no_coverage_sub: '将 options.coverage 指向 lcov 文件（例如 coverage/lcov.info）。',
+  col_coverage: '覆盖率',
+  col_risk: '风险',
+  cov_none: '无',
 }
 
 const hi: Dictionary = {
@@ -328,6 +344,14 @@ const hi: Dictionary = {
   col_kind: 'प्रकार',
   col_line: 'लाइन',
   dead_hint: 'पब्लिक API? उन फ़ाइलों को options.deadCode.entries में डालें।',
+  tab_risk: 'जोखिम',
+  risk_sub: 'कवरेज की कमी से भारित हॉटस्पॉट',
+  no_risk: 'कोई जोखिम भरा हॉटस्पॉट नहीं।',
+  no_coverage_title: 'कोई कवरेज रिपोर्ट नहीं',
+  no_coverage_sub: 'options.coverage को एक lcov फ़ाइल पर सेट करें (जैसे coverage/lcov.info)।',
+  col_coverage: 'कवरेज',
+  col_risk: 'जोखिम',
+  cov_none: 'कोई नहीं',
 }
 
 const es: Dictionary = {
@@ -430,6 +454,14 @@ const es: Dictionary = {
   col_kind: 'tipo',
   col_line: 'línea',
   dead_hint: '¿API pública? Lista esos archivos en options.deadCode.entries.',
+  tab_risk: 'Riesgo',
+  risk_sub: 'puntos críticos ponderados por falta de cobertura',
+  no_risk: 'Sin puntos críticos de riesgo.',
+  no_coverage_title: 'Sin informe de cobertura',
+  no_coverage_sub: 'Apunta options.coverage a un archivo lcov (p. ej. coverage/lcov.info).',
+  col_coverage: 'cobertura',
+  col_risk: 'riesgo',
+  cov_none: 'ninguna',
 }
 
 const fr: Dictionary = {
@@ -532,6 +564,14 @@ const fr: Dictionary = {
   col_kind: 'type',
   col_line: 'ligne',
   dead_hint: 'API publique ? Listez ces fichiers dans options.deadCode.entries.',
+  tab_risk: 'Risque',
+  risk_sub: 'points chauds pondérés par la couverture manquante',
+  no_risk: 'Aucun point chaud à risque.',
+  no_coverage_title: 'Aucun rapport de couverture',
+  no_coverage_sub: 'Pointez options.coverage vers un fichier lcov (par ex. coverage/lcov.info).',
+  col_coverage: 'couverture',
+  col_risk: 'risque',
+  cov_none: 'aucune',
 }
 
 const ar: Dictionary = {
@@ -634,6 +674,14 @@ const ar: Dictionary = {
   col_kind: 'النوع',
   col_line: 'السطر',
   dead_hint: 'واجهة عامة؟ أدرج هذه الملفات في options.deadCode.entries.',
+  tab_risk: 'الخطر',
+  risk_sub: 'النقاط الساخنة مرجّحة بنقص التغطية',
+  no_risk: 'لا نقاط ساخنة خطرة.',
+  no_coverage_title: 'لا تقرير تغطية',
+  no_coverage_sub: 'وجّه options.coverage إلى ملف lcov (مثل coverage/lcov.info).',
+  col_coverage: 'التغطية',
+  col_risk: 'الخطر',
+  cov_none: 'لا شيء',
 }
 
 const bn: Dictionary = {
@@ -736,6 +784,14 @@ const bn: Dictionary = {
   col_kind: 'ধরন',
   col_line: 'লাইন',
   dead_hint: 'পাবলিক API? সেই ফাইলগুলো options.deadCode.entries-এ দিন।',
+  tab_risk: 'ঝুঁকি',
+  risk_sub: 'কভারেজ ঘাটতি দিয়ে ভারিত হটস্পট',
+  no_risk: 'কোনো ঝুঁকিপূর্ণ হটস্পট নেই।',
+  no_coverage_title: 'কোনো কভারেজ রিপোর্ট নেই',
+  no_coverage_sub: 'options.coverage একটি lcov ফাইলে সেট করুন (যেমন coverage/lcov.info)।',
+  col_coverage: 'কভারেজ',
+  col_risk: 'ঝুঁকি',
+  cov_none: 'নেই',
 }
 
 const pt: Dictionary = {
@@ -838,6 +894,14 @@ const pt: Dictionary = {
   col_kind: 'tipo',
   col_line: 'linha',
   dead_hint: 'API pública? Liste esses arquivos em options.deadCode.entries.',
+  tab_risk: 'Risco',
+  risk_sub: 'hotspots ponderados pela cobertura ausente',
+  no_risk: 'Nenhum hotspot de risco.',
+  no_coverage_title: 'Sem relatório de cobertura',
+  no_coverage_sub: 'Aponte options.coverage para um arquivo lcov (ex.: coverage/lcov.info).',
+  col_coverage: 'cobertura',
+  col_risk: 'risco',
+  cov_none: 'nenhuma',
 }
 
 const ru: Dictionary = {
@@ -940,6 +1004,14 @@ const ru: Dictionary = {
   col_kind: 'тип',
   col_line: 'строка',
   dead_hint: 'Публичный API? Укажите эти файлы в options.deadCode.entries.',
+  tab_risk: 'Риск',
+  risk_sub: 'горячие точки с поправкой на нехватку покрытия',
+  no_risk: 'Нет рискованных горячих точек.',
+  no_coverage_title: 'Нет отчёта о покрытии',
+  no_coverage_sub: 'Укажите options.coverage на файл lcov (например coverage/lcov.info).',
+  col_coverage: 'покрытие',
+  col_risk: 'риск',
+  cov_none: 'нет',
 }
 
 const ja: Dictionary = {
@@ -1042,6 +1114,14 @@ const ja: Dictionary = {
   col_kind: '種類',
   col_line: '行',
   dead_hint: '公開API？それらのファイルを options.deadCode.entries に記載してください。',
+  tab_risk: 'リスク',
+  risk_sub: 'カバレッジ不足で重み付けしたホットスポット',
+  no_risk: 'リスクの高いホットスポットはありません。',
+  no_coverage_title: 'カバレッジレポートがありません',
+  no_coverage_sub: 'options.coverage に lcov ファイルを指定してください（例: coverage/lcov.info）。',
+  col_coverage: 'カバレッジ',
+  col_risk: 'リスク',
+  cov_none: 'なし',
 }
 
 export const DICTIONARY: Record<string, Dictionary> = { en, zh, hi, es, fr, ar, bn, pt, ru, ja }

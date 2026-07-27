@@ -67,7 +67,10 @@ export const assembleDashboardData = (
   const cycles = collected.context ? cyclesFromContext(collected.context) : []
   const cohesion = collected.context ? cohesionFromContext(collected.context) : []
   const config = readConfigSafe()
-  const deadCode = collected.context ? findDeadExports(collected.context, config?.options.deadCode?.entries ?? []) : []
+  // Dead-code detection walks references per export (seconds on big repos). The live dashboard
+  // fetches it lazily from /dead when the tab is opened, so only the one-shot static export pays
+  // for it here.
+  const deadCode = !live && collected.context ? findDeadExports(collected.context, config?.options.deadCode?.entries ?? []) : []
   const historyPath = options.record ?? DEFAULT_HISTORY
   const history = existsSync(historyPath) ? readHistory(historyPath) : []
 

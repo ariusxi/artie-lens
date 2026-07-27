@@ -3,7 +3,9 @@ import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { watch } from 'chokidar'
 
 import { RunOptions } from '../types/config.interface'
-import { assertConfigShape, getConfigPath, writeConfig } from '../helpers/config.helpers'
+import { assertConfigShape, getConfigPath, readConfig, writeConfig } from '../helpers/config.helpers'
+import { buildAnalysisContext } from '../helpers/metric.helpers'
+import { findDeadExports } from '../helpers/dead.helpers'
 import { buildDashboard, buildDashboardModel } from '../helpers/report.dashboard'
 import { assembleDashboardData, collectReport } from './run.routine'
 
@@ -36,6 +38,15 @@ export const dashboardLens = async (directory = process.cwd(), options: RunOptio
     for (const client of clients) client.write(`data: ${payload}\n\n`)
   }
 
+  // Dead-code detection is expensive, so it is computed on demand (when the client opens the tab)
+  // rather than on every re-analysis.
+  const deadCode = async (): Promise<string> => {
+    const config = readConfig()
+    const context = await buildAnalysisContext(directory, config.includes!, config.excludes!, config.options.ignoreReExports)
+    const dead = context ? findDeadExports(context, config.options.deadCode?.entries ?? []) : []
+    return JSON.stringify({ deadCode: dead })
+  }
+
   // Persists the edited config, re-analyzes, and streams the new model to every client. If the new
   // config cannot be analyzed, the previous file is restored so a bad edit never breaks the server.
   const applyConfig = async (request: IncomingMessage): Promise<void> => {
@@ -61,6 +72,17 @@ export const dashboardLens = async (directory = process.cwd(), options: RunOptio
         response.writeHead(204).end()
       } catch (error) {
         response.writeHead(400, { 'Content-Type': 'application/json' })
+        response.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }))
+      }
+      return
+    }
+
+    if (request.url === '/dead') {
+      try {
+        response.writeHead(200, { 'Content-Type': 'application/json' })
+        response.end(await deadCode())
+      } catch (error) {
+        response.writeHead(500, { 'Content-Type': 'application/json' })
         response.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }))
       }
       return

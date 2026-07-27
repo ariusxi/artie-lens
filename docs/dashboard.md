@@ -14,6 +14,7 @@ network calls and nothing to install in the browser.
 | Modules | Findings rolled up by top-level directory |
 | Seams | Cohesive clusters ranked as extraction candidates |
 | Violations | Architecture-rule breaches, plus each dependency cycle drawn as a node-link graph |
+| Dead code | Exported symbols nothing imports (fetched on demand on the live server) |
 | Config | The `.artierc.json` configuration as an editable form (live dashboard only) |
 
 Every table is sortable (click a header) and filterable (the search box). Click any row with a

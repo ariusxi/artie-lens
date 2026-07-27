@@ -195,7 +195,10 @@ var app=document.getElementById('app');
 var I18N=window.__I18N__||{dict:{en:{}},langs:[{code:'en',name:'English'}]};
 var DICT=I18N.dict;var LANGS=I18N.langs;
 var SEVW={CRITICAL:3,WARNING:2,OK:1};
-var state={tab:'overview',metric:null,sort:{},drawer:null,processing:false,cfgSaved:false,cfgError:'',awaitingConfig:false};
+var state={tab:'overview',metric:null,sort:{},drawer:null,processing:false,cfgSaved:false,cfgError:'',awaitingConfig:false,deadLoading:false};
+// On the live dashboard the dead-code list is fetched from /dead only when the tab is opened;
+// null means "not fetched yet". In the static export the model already carries it.
+var deadData=null;
 var MOON='<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" fill="currentColor"/></svg>';
 var SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>';
 
@@ -515,8 +518,21 @@ function processConfig(){
     .catch(function(err){clearTimeout(guard);state.processing=false;state.awaitingConfig=false;state.cfgError=String(err&&err.message?err.message:err);render();});
 }
 
+function deadList(){return M.live?deadData:M.deadCode;}
+function loadDead(){
+  if(!M.live||state.deadLoading||deadData!==null)return false;
+  state.deadLoading=true;render();
+  fetch('/dead').then(function(r){return r.json();}).then(function(d){deadData=d.deadCode||[];state.deadLoading=false;render();})
+    .catch(function(){deadData=[];state.deadLoading=false;render();});
+  return true;
+}
 function deadTab(){
-  var rows=M.deadCode.map(function(d){return {name:d.name,kind:d.kind,line:d.line,file:d.file,_file:d.file};});
+  var list=deadList();
+  if(list===null){
+    var loading=state.deadLoading?'<div class="proc"><span class="sp"></span>'+esc(t('cfg_processing'))+'</div><div class="sk sk-panel"><div class="sh"></div></div>':'<div class="empty">'+esc(t('cfg_processing'))+'</div>';
+    return '<div class="panel"><h2>'+esc(t('tab_dead'))+' <span class="sub">'+esc(t('dead_sub'))+'</span></h2><div class="body">'+loading+'</div></div>';
+  }
+  var rows=list.map(function(d){return {name:d.name,kind:d.kind,line:d.line,file:d.file,_file:d.file};});
   if(!rows.length)return '<div class="panel"><div class="empty"><b>'+esc(t('clean'))+'</b>'+esc(t('no_dead'))+'</div></div>';
   var tbl=table('dead',[
     {key:'name',label:t('col_symbol'),cell:function(r){return esc(r.name);}},
@@ -534,7 +550,7 @@ var TABS=[
   {id:'modules',view:modulesTab,count:function(){return rollupRows().length;}},
   {id:'seams',view:seamsTab,count:function(){return M.seams.length;}},
   {id:'violations',view:violationsTab,count:function(){return M.violations.length+M.cycles.length;}},
-  {id:'dead',view:deadTab,count:function(){return M.deadCode.length;}},
+  {id:'dead',view:deadTab,count:function(){var l=deadList();return l?l.length:null;}},
   {id:'config',view:configTab,count:function(){return null;}}
 ];
 
@@ -599,7 +615,7 @@ app.addEventListener('click',function(ev){
   if(el.hasAttribute('data-close')){closeDrawer();return;}
   if(el.hasAttribute('data-process')){processConfig();return;}
   if(el.hasAttribute('data-theme-toggle')){theme=theme==='dark'?'light':'dark';localStorage.setItem('artie-theme',theme);applyChrome();render();return;}
-  if(el.hasAttribute('data-tab')){state.tab=el.getAttribute('data-tab');changed={};render();return;}
+  if(el.hasAttribute('data-tab')){state.tab=el.getAttribute('data-tab');changed={};if(state.tab==='dead'){if(!loadDead())render();}else render();return;}
   if(el.hasAttribute('data-metric')){state.metric=el.getAttribute('data-metric');render();return;}
   if(el.hasAttribute('data-file')){openDrawer(el.getAttribute('data-file'));return;}
   if(el.hasAttribute('data-sort')){var p=el.getAttribute('data-sort').split('|');var id=p[0],key=p[1];var cur=state.sort[id];state.sort[id]=cur&&cur.key===key?{key:key,dir:-cur.dir}:{key:key,dir:key==='value'||key==='module'||key==='file'||key==='_file'?1:-1};render();return;}
@@ -618,9 +634,10 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
 document.addEventListener('click',function(e){if(e.target.id==='scrim')closeDrawer();});
 
 window.__artieApply=function(next){changed=diff(M,next);prev=M;M=next;reindex();
-  state.processing=false;
+  state.processing=false;deadData=null;state.deadLoading=false;
   if(state.awaitingConfig){state.awaitingConfig=false;state.cfgSaved=true;setTimeout(function(){state.cfgSaved=false;},4000);}
-  render();};
+  render();
+  if(state.tab==='dead')loadDead();};
 applyChrome();
 render();
 })();

@@ -21,7 +21,10 @@ src/types/old.ts:3        interface DeprecatedShape
 ```
 
 The same list appears on the dashboard's **Dead code** tab, sortable and filterable, where each
-row drills into the file's full metric profile.
+row drills into the file's full metric profile. Because the reference walk is the slowest part of
+an analysis, the live dashboard computes it lazily: it is fetched only when you open the tab (with
+a loading state), not on every re-analysis, so the watch loop stays fast. The static HTML export
+embeds the list directly.
 
 ## How "dead" is decided
 

@@ -131,13 +131,30 @@ describe('dashboard client app', () => {
     expect(graph.querySelectorAll('path[marker-end]').length).toBeGreaterThanOrEqual(3)
   })
 
-  it('lists unused exports in the dead code tab', () => {
+  it('lists unused exports in the dead code tab (static export embeds them)', () => {
     const doc = boot().window.document
     ;(doc.querySelector('[data-tab="dead"]') as HTMLElement).click()
 
     expect(doc.querySelector('.tab.on')!.textContent).toContain('Dead code')
     expect(doc.querySelectorAll('#dead tbody tr')).toHaveLength(2)
     expect(doc.body.textContent).toContain('oldHelper')
+  })
+
+  it('fetches dead code lazily from /dead on the live dashboard', async () => {
+    const dom = boot({ live: true, deadCode: [] })
+    const doc = dom.window.document
+    let requested = ''
+    ;(dom.window as any).fetch = (url: string) => {
+      requested = url
+      return Promise.resolve({ json: () => Promise.resolve({ deadCode: [{ file: 'src/x.ts', name: 'ghostExport', kind: 'const', line: 5 }] }) })
+    }
+
+    ;(doc.querySelector('[data-tab="dead"]') as HTMLElement).click()
+
+    expect(requested).toBe('/dead') // not computed up front, fetched on open
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(doc.body.textContent).toContain('ghostExport')
   })
 
   it('renders the config form from the embedded config', () => {

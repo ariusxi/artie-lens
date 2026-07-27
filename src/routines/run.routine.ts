@@ -5,7 +5,7 @@ import { computeRegressions, readBaseline, writeBaseline } from '../helpers/base
 import { checkRules } from '../helpers/rule.helpers'
 import { buildSarif } from '../helpers/sarif.helpers'
 import { buildDashboard, DashboardData } from '../helpers/report.dashboard'
-import { DEFAULT_SINCE, getChurn, getCurrentCommit } from '../helpers/git.helpers'
+import { addWorktree, DEFAULT_SINCE, getChurn, getCurrentCommit, removeWorktree } from '../helpers/git.helpers'
 import { computeHotspots } from '../helpers/hotspot.helpers'
 import { computeSeams, findCommunities } from '../helpers/seam.helpers'
 import { cohesionFromContext, cyclesFromContext } from '../helpers/suggest.helpers'
@@ -101,6 +101,19 @@ const readConfigSafe = (): ArtieConfig | null => {
     return readConfig()
   } catch {
     return null
+  }
+}
+
+// Analyzes a git ref in a temporary detached worktree, using the current config so both sides of a
+// comparison are measured the same way. Returns null when the ref cannot be checked out.
+export const analyzeRef = async (directory: string, ref: string): Promise<MetricReport[] | null> => {
+  const worktree = addWorktree(directory, ref)
+  if (!worktree) return null
+
+  try {
+    return (await collectReport(worktree)).report
+  } finally {
+    removeWorktree(directory, worktree)
   }
 }
 

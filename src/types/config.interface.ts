@@ -87,6 +87,7 @@ export interface RunOptions {
   record?: string
   port?: string
   coverage?: string
+  against?: string
 }
 
 export interface Snapshot {

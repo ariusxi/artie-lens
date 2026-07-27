@@ -59,6 +59,7 @@ const VALUE_FLAGS: Record<string, ValueFlag> = {
   '--record': { set: (options, value) => { options.record = value }, default: DEFAULT_HISTORY },
   '--port': { set: (options, value) => { options.port = value } },
   '--coverage': { set: (options, value) => { options.coverage = value }, default: DEFAULT_COVERAGE },
+  '--against': { set: (options, value) => { options.against = value }, default: 'main' },
 }
 
 export const parseRunOptions = (flags: string[]): RunOptions => {

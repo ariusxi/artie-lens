@@ -132,6 +132,17 @@ const en: Dictionary = {
   col_coverage: 'coverage',
   col_risk: 'risk',
   cov_none: 'none',
+  tab_compare: 'Compare',
+  cmp_sub: 'working tree vs a git ref',
+  cmp_run: 'Compare',
+  cmp_hint: 'Enter a ref (branch, tag or commit) and compare.',
+  cmp_none: 'No differences in the findings.',
+  cmp_live_only: 'Comparison needs the live dashboard: run artie dashboard.',
+  cmp_worse: 'worsened',
+  cmp_new: 'new',
+  cmp_better: 'improved',
+  cmp_gone: 'resolved',
+  col_change: 'change',
 }
 
 const zh: Dictionary = {
@@ -242,6 +253,17 @@ const zh: Dictionary = {
   col_coverage: '覆盖率',
   col_risk: '风险',
   cov_none: '无',
+  tab_compare: '对比',
+  cmp_sub: '工作区与某个 git 引用',
+  cmp_run: '对比',
+  cmp_hint: '输入一个引用（分支、标签或提交）进行对比。',
+  cmp_none: '发现没有差异。',
+  cmp_live_only: '对比需要实时面板：运行 artie dashboard。',
+  cmp_worse: '变差',
+  cmp_new: '新增',
+  cmp_better: '改善',
+  cmp_gone: '已解决',
+  col_change: '变化',
 }
 
 const hi: Dictionary = {
@@ -352,6 +374,17 @@ const hi: Dictionary = {
   col_coverage: 'कवरेज',
   col_risk: 'जोखिम',
   cov_none: 'कोई नहीं',
+  tab_compare: 'तुलना',
+  cmp_sub: 'वर्किंग ट्री बनाम एक git रेफ़',
+  cmp_run: 'तुलना करें',
+  cmp_hint: 'एक रेफ़ (ब्रांच, टैग या कमिट) दर्ज करें और तुलना करें।',
+  cmp_none: 'निष्कर्षों में कोई अंतर नहीं।',
+  cmp_live_only: 'तुलना के लिए लाइव डैशबोर्ड चाहिए: artie dashboard चलाएँ।',
+  cmp_worse: 'बिगड़ा',
+  cmp_new: 'नया',
+  cmp_better: 'सुधरा',
+  cmp_gone: 'हल हुआ',
+  col_change: 'बदलाव',
 }
 
 const es: Dictionary = {
@@ -462,6 +495,17 @@ const es: Dictionary = {
   col_coverage: 'cobertura',
   col_risk: 'riesgo',
   cov_none: 'ninguna',
+  tab_compare: 'Comparar',
+  cmp_sub: 'árbol de trabajo vs una referencia git',
+  cmp_run: 'Comparar',
+  cmp_hint: 'Introduce una referencia (rama, etiqueta o commit) y compara.',
+  cmp_none: 'Sin diferencias en los hallazgos.',
+  cmp_live_only: 'La comparación requiere el panel en vivo: ejecuta artie dashboard.',
+  cmp_worse: 'empeoró',
+  cmp_new: 'nuevo',
+  cmp_better: 'mejoró',
+  cmp_gone: 'resuelto',
+  col_change: 'cambio',
 }
 
 const fr: Dictionary = {
@@ -572,6 +616,17 @@ const fr: Dictionary = {
   col_coverage: 'couverture',
   col_risk: 'risque',
   cov_none: 'aucune',
+  tab_compare: 'Comparer',
+  cmp_sub: 'arbre de travail vs une référence git',
+  cmp_run: 'Comparer',
+  cmp_hint: 'Saisissez une référence (branche, tag ou commit) et comparez.',
+  cmp_none: 'Aucune différence dans les constats.',
+  cmp_live_only: 'La comparaison nécessite le tableau de bord en direct : lancez artie dashboard.',
+  cmp_worse: 'aggravé',
+  cmp_new: 'nouveau',
+  cmp_better: 'amélioré',
+  cmp_gone: 'résolu',
+  col_change: 'changement',
 }
 
 const ar: Dictionary = {
@@ -682,6 +737,17 @@ const ar: Dictionary = {
   col_coverage: 'التغطية',
   col_risk: 'الخطر',
   cov_none: 'لا شيء',
+  tab_compare: 'مقارنة',
+  cmp_sub: 'شجرة العمل مقابل مرجع git',
+  cmp_run: 'قارن',
+  cmp_hint: 'أدخل مرجعًا (فرعًا أو وسمًا أو التزامًا) وقارن.',
+  cmp_none: 'لا فروق في النتائج.',
+  cmp_live_only: 'تتطلب المقارنة اللوحة المباشرة: شغّل artie dashboard.',
+  cmp_worse: 'تفاقم',
+  cmp_new: 'جديد',
+  cmp_better: 'تحسّن',
+  cmp_gone: 'حُلّ',
+  col_change: 'التغيير',
 }
 
 const bn: Dictionary = {
@@ -792,6 +858,17 @@ const bn: Dictionary = {
   col_coverage: 'কভারেজ',
   col_risk: 'ঝুঁকি',
   cov_none: 'নেই',
+  tab_compare: 'তুলনা',
+  cmp_sub: 'ওয়ার্কিং ট্রি বনাম একটি git রেফ',
+  cmp_run: 'তুলনা করুন',
+  cmp_hint: 'একটি রেফ (ব্রাঞ্চ, ট্যাগ বা কমিট) দিন এবং তুলনা করুন।',
+  cmp_none: 'ফলাফলে কোনো পার্থক্য নেই।',
+  cmp_live_only: 'তুলনার জন্য লাইভ ড্যাশবোর্ড দরকার: artie dashboard চালান।',
+  cmp_worse: 'খারাপ হয়েছে',
+  cmp_new: 'নতুন',
+  cmp_better: 'উন্নত',
+  cmp_gone: 'সমাধান হয়েছে',
+  col_change: 'পরিবর্তন',
 }
 
 const pt: Dictionary = {
@@ -902,6 +979,17 @@ const pt: Dictionary = {
   col_coverage: 'cobertura',
   col_risk: 'risco',
   cov_none: 'nenhuma',
+  tab_compare: 'Comparar',
+  cmp_sub: 'árvore de trabalho vs uma ref git',
+  cmp_run: 'Comparar',
+  cmp_hint: 'Informe uma ref (branch, tag ou commit) e compare.',
+  cmp_none: 'Nenhuma diferença nos achados.',
+  cmp_live_only: 'A comparação precisa do dashboard ao vivo: rode artie dashboard.',
+  cmp_worse: 'piorou',
+  cmp_new: 'novo',
+  cmp_better: 'melhorou',
+  cmp_gone: 'resolvido',
+  col_change: 'mudança',
 }
 
 const ru: Dictionary = {
@@ -1012,6 +1100,17 @@ const ru: Dictionary = {
   col_coverage: 'покрытие',
   col_risk: 'риск',
   cov_none: 'нет',
+  tab_compare: 'Сравнение',
+  cmp_sub: 'рабочее дерево против git-рефа',
+  cmp_run: 'Сравнить',
+  cmp_hint: 'Введите реф (ветку, тег или коммит) и сравните.',
+  cmp_none: 'Нет различий в находках.',
+  cmp_live_only: 'Сравнение требует живой панели: запустите artie dashboard.',
+  cmp_worse: 'ухудшилось',
+  cmp_new: 'новое',
+  cmp_better: 'улучшилось',
+  cmp_gone: 'исправлено',
+  col_change: 'изменение',
 }
 
 const ja: Dictionary = {
@@ -1122,6 +1221,17 @@ const ja: Dictionary = {
   col_coverage: 'カバレッジ',
   col_risk: 'リスク',
   cov_none: 'なし',
+  tab_compare: '比較',
+  cmp_sub: '作業ツリー vs git リファレンス',
+  cmp_run: '比較',
+  cmp_hint: 'リファレンス（ブランチ・タグ・コミット）を入力して比較します。',
+  cmp_none: '検出に差分はありません。',
+  cmp_live_only: '比較にはライブダッシュボードが必要です: artie dashboard を実行。',
+  cmp_worse: '悪化',
+  cmp_new: '新規',
+  cmp_better: '改善',
+  cmp_gone: '解消',
+  col_change: '変化',
 }
 
 export const DICTIONARY: Record<string, Dictionary> = { en, zh, hi, es, fr, ar, bn, pt, ru, ja }

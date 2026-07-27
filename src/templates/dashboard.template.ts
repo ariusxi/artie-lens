@@ -187,6 +187,14 @@ input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:po
 .covbar{display:inline-block;width:60px;height:8px;background:var(--bg);border-radius:3px;overflow:hidden;vertical-align:middle;margin-inline-end:8px}
 .covbar .fill{display:block;height:100%}
 .covbar .fill.OK{background:var(--ok)}.covbar .fill.WARNING{background:var(--warn)}.covbar .fill.CRITICAL{background:var(--crit)}
+.chg{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.chg.worse{color:var(--crit);background:color-mix(in srgb,var(--crit) 15%,transparent)}
+.chg.new{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.chg.better{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+.chg.gone{color:var(--dim);background:color-mix(in srgb,var(--dim) 22%,transparent)}
+.cmpsum{font-size:13px;color:var(--dim);display:flex;gap:22px;flex-wrap:wrap}
+.cmpsum b{font-variant-numeric:tabular-nums}
+.cmpref{flex:0 0 200px;min-width:120px}
 @media(max-width:640px){.path{max-width:150px}.barrow{grid-template-columns:56px 1fr}.barrow .ct{grid-column:1/-1;text-align:start}.fgrid{grid-template-columns:1fr}}
 `
 
@@ -200,10 +208,12 @@ var app=document.getElementById('app');
 var I18N=window.__I18N__||{dict:{en:{}},langs:[{code:'en',name:'English'}]};
 var DICT=I18N.dict;var LANGS=I18N.langs;
 var SEVW={CRITICAL:3,WARNING:2,OK:1};
-var state={tab:'overview',metric:null,sort:{},drawer:null,processing:false,cfgSaved:false,cfgError:'',awaitingConfig:false,deadLoading:false};
+var state={tab:'overview',metric:null,sort:{},drawer:null,processing:false,cfgSaved:false,cfgError:'',awaitingConfig:false,deadLoading:false,compareLoading:false,compareRef:'main',compareError:''};
 // On the live dashboard the dead-code list is fetched from /dead only when the tab is opened;
 // null means "not fetched yet". In the static export the model already carries it.
 var deadData=null;
+// The comparison against a git ref is fetched on demand from /compare; null means "not run yet".
+var compareData=null;
 var MOON='<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" fill="currentColor"/></svg>';
 var SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>';
 
@@ -503,6 +513,41 @@ function configTab(){
     '<div class="panel" style="margin-top:12px"><div class="body faction">'+action+'</div></div>';
 }
 
+var CHG_ORDER={worse:0,new:1,better:2,gone:3};
+function loadCompare(){
+  if(!M.live||state.compareLoading)return;
+  var ref=state.compareRef||'main';
+  state.compareLoading=true;state.compareError='';render();
+  fetch('/compare?ref='+encodeURIComponent(ref)).then(function(r){if(r.ok)return r.json();return r.json().then(function(e){throw new Error(e&&e.error?e.error:'HTTP '+r.status);});})
+    .then(function(d){compareData=d;state.compareLoading=false;render();})
+    .catch(function(err){state.compareLoading=false;state.compareError=String(err&&err.message?err.message:err);render();});
+}
+function sideNum(base,head,worseHigher){var tone=head>base?(worseHigher?'CRITICAL':'OK'):head<base?(worseHigher?'OK':'CRITICAL'):'';return base+' → <b class="sev '+tone+'">'+head+'</b>';}
+function deltaCell(r){
+  var from=r.from?'<span class="sev '+r.from+'">'+r.from+' '+r.fromN+'</span>':'<span class="mut">-</span>';
+  var to=r.to?'<span class="sev '+r.to+'">'+r.to+' '+r.toN+'</span>':'<span class="mut">-</span>';
+  return from+' <span class="mut">→</span> '+to;
+}
+function compareBody(c){
+  var sum='<div class="body"><div class="cmpsum"><span>'+esc(t('kpi_criticals'))+': '+sideNum(c.base.criticals,c.head.criticals,true)+'</span><span>'+esc(t('kpi_warnings'))+': '+sideNum(c.base.warnings,c.head.warnings,true)+'</span></div></div>';
+  if(!c.deltas.length)return sum+'<div class="empty"><b>'+esc(t('clean'))+'</b>'+esc(t('cmp_none'))+'</div>';
+  var rows=c.deltas.map(function(d){return {change:d.change,metric:d.metric,value:d.value,from:d.fromLabel,fromN:d.fromTotal,to:d.toLabel,toN:d.toTotal,_file:d.file};});
+  var tbl=table('cmp',[
+    {key:'change',label:t('col_change'),sortVal:function(r){return CHG_ORDER[r.change];},cell:function(r){return '<span class="chg '+r.change+'">'+esc(t('cmp_'+r.change))+'</span>';}},
+    {key:'metric',label:t('col_metric'),cell:function(r){return '<span class="mut">'+esc(r.metric.toUpperCase())+'</span>';}},
+    {key:'value',label:t('col_class'),cell:function(r){return esc(r.value);}},
+    {key:'toN',label:t('col_change'),sortable:false,cell:deltaCell}
+  ],rows);
+  return sum+tbl;
+}
+function compareTab(){
+  if(!M.live)return '<div class="panel"><div class="empty">'+esc(t('cmp_live_only'))+'</div></div>';
+  var form='<div class="toolbar"><input class="search cmpref" data-cmp-ref value="'+esc(state.compareRef||'main')+'" placeholder="main"><button class="fbtn" data-compare>'+esc(t('cmp_run'))+'</button>'+(state.compareError?'<span class="ferr">'+esc(state.compareError)+'</span>':'')+'</div>';
+  var body=state.compareLoading
+    ?'<div class="body"><div class="proc"><span class="sp"></span>'+esc(t('cfg_processing'))+'</div><div class="sk sk-panel"><div class="sh"></div></div></div>'
+    :compareData?compareBody(compareData):'<div class="empty">'+esc(t('cmp_hint'))+'</div>';
+  return '<div class="panel"><h2>'+esc(t('tab_compare'))+' <span class="sub">'+esc(t('cmp_sub'))+'</span></h2>'+form+body+'</div>';
+}
 function sk(cls){return '<div class="sk '+cls+'"><div class="sh"></div></div>';}
 function skeletonBody(){
   return '<div class="proc"><span class="sp"></span>'+esc(t('cfg_processing'))+'</div>'+
@@ -575,6 +620,7 @@ var TABS=[
   {id:'seams',view:seamsTab,count:function(){return M.seams.length;}},
   {id:'violations',view:violationsTab,count:function(){return M.violations.length+M.cycles.length;}},
   {id:'dead',view:deadTab,count:function(){var l=deadList();return l?l.length:null;}},
+  {id:'compare',view:compareTab,count:function(){return null;}},
   {id:'config',view:configTab,count:function(){return null;}}
 ];
 
@@ -634,10 +680,11 @@ function diff(oldM,newM){
 
 /* ---- events ---- */
 app.addEventListener('click',function(ev){
-  var el=ev.target.closest('[data-tab],[data-metric],[data-sort],[data-file],[data-close],[data-theme-toggle],[data-process]');
+  var el=ev.target.closest('[data-tab],[data-metric],[data-sort],[data-file],[data-close],[data-theme-toggle],[data-process],[data-compare]');
   if(!el)return;
   if(el.hasAttribute('data-close')){closeDrawer();return;}
   if(el.hasAttribute('data-process')){processConfig();return;}
+  if(el.hasAttribute('data-compare')){loadCompare();return;}
   if(el.hasAttribute('data-theme-toggle')){theme=theme==='dark'?'light':'dark';localStorage.setItem('artie-theme',theme);applyChrome();render();return;}
   if(el.hasAttribute('data-tab')){state.tab=el.getAttribute('data-tab');changed={};if(state.tab==='dead'){if(!loadDead())render();}else render();return;}
   if(el.hasAttribute('data-metric')){state.metric=el.getAttribute('data-metric');render();return;}
@@ -649,6 +696,8 @@ app.addEventListener('change',function(ev){
   lang=s.value;localStorage.setItem('artie-lang',lang);applyChrome();render();
 });
 app.addEventListener('input',function(ev){
+  var refInput=ev.target.closest('[data-cmp-ref]');
+  if(refInput){state.compareRef=refInput.value;return;}
   var inp=ev.target.closest('[data-search]');if(!inp)return;
   var id=inp.getAttribute('data-search');var q=inp.value.toLowerCase();
   var tbl=document.getElementById(id);if(!tbl)return;
@@ -658,7 +707,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer(
 document.addEventListener('click',function(e){if(e.target.id==='scrim')closeDrawer();});
 
 window.__artieApply=function(next){changed=diff(M,next);prev=M;M=next;reindex();
-  state.processing=false;deadData=null;state.deadLoading=false;
+  state.processing=false;deadData=null;state.deadLoading=false;compareData=null;state.compareLoading=false;
   if(state.awaitingConfig){state.awaitingConfig=false;state.cfgSaved=true;setTimeout(function(){state.cfgSaved=false;},4000);}
   render();
   if(state.tab==='dead')loadDead();};

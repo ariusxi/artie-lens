@@ -12,6 +12,7 @@ const HELP_LINES = [
   '  seams [dir]       Detect module communities and propose extraction boundaries',
   '  dead [dir]        List exports that are never imported anywhere (unused code)',
   '  risk [dir]        Rank hotspots by missing test coverage (needs an lcov report)',
+  '  compare [dir]     Diff the working tree against a ref (--against, default main)',
   '  comment [dir]     Post a summary of regressions and violations on the current PR (CI)',
   '  trend             Show the trajectory of recorded runs (see run --record)',
   '  dashboard [dir]   Serve a live, auto-refreshing HTML dashboard (--port, default 4300)',

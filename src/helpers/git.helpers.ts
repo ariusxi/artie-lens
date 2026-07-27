@@ -1,5 +1,7 @@
 import { spawnSync } from 'child_process'
+import { randomBytes } from 'crypto'
 import { realpathSync } from 'fs'
+import { tmpdir } from 'os'
 import { join, relative } from 'path'
 
 export const DEFAULT_SINCE = '90 days ago'
@@ -11,6 +13,17 @@ const runGit = (directory: string, args: string[]): string | null => {
   if (result.status !== 0) return null
 
   return result.stdout
+}
+
+// Checks out a ref into a throwaway detached worktree so it can be analyzed without touching the
+// working tree. Returns the worktree path, or null when the ref or repository is invalid.
+export const addWorktree = (directory: string, ref: string): string | null => {
+  const path = join(tmpdir(), `artie-wt-${randomBytes(6).toString('hex')}`)
+  return runGit(directory, ['worktree', 'add', '--detach', path, ref]) === null ? null : path
+}
+
+export const removeWorktree = (directory: string, path: string): void => {
+  runGit(directory, ['worktree', 'remove', '--force', path])
 }
 
 export const getRepositoryRoot = (directory: string): string | null => {

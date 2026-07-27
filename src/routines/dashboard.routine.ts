@@ -6,8 +6,9 @@ import { RunOptions } from '../types/config.interface'
 import { assertConfigShape, getConfigPath, readConfig, writeConfig } from '../helpers/config.helpers'
 import { buildAnalysisContext } from '../helpers/metric.helpers'
 import { findDeadExports } from '../helpers/dead.helpers'
+import { compareReports } from '../helpers/compare.helpers'
 import { buildDashboard, buildDashboardModel } from '../helpers/report.dashboard'
-import { assembleDashboardData, collectReport } from './run.routine'
+import { analyzeRef, assembleDashboardData, collectReport } from './run.routine'
 
 const DEFAULT_PORT = 4300
 const WATCH_DEBOUNCE_MS = 300
@@ -47,6 +48,16 @@ export const dashboardLens = async (directory = process.cwd(), options: RunOptio
     return JSON.stringify({ deadCode: dead })
   }
 
+  // Analyzes a ref in a throwaway worktree and diffs it against the working tree. Computed on
+  // demand from the Compare tab because it doubles the analysis work.
+  const compare = async (ref: string): Promise<string> => {
+    if (ref.startsWith('-')) throw new Error('Invalid ref.')
+    const base = await analyzeRef(directory, ref)
+    if (!base) throw new Error(`Could not analyze "${ref}".`)
+    const head = (await collectReport(directory)).report
+    return JSON.stringify(compareReports(base, head, ref))
+  }
+
   // Persists the edited config, re-analyzes, and streams the new model to every client. If the new
   // config cannot be analyzed, the previous file is restored so a bad edit never breaks the server.
   const applyConfig = async (request: IncomingMessage): Promise<void> => {
@@ -83,6 +94,18 @@ export const dashboardLens = async (directory = process.cwd(), options: RunOptio
         response.end(await deadCode())
       } catch (error) {
         response.writeHead(500, { 'Content-Type': 'application/json' })
+        response.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }))
+      }
+      return
+    }
+
+    if (request.url?.startsWith('/compare')) {
+      try {
+        const ref = new URL(request.url, 'http://localhost').searchParams.get('ref') || 'main'
+        response.writeHead(200, { 'Content-Type': 'application/json' })
+        response.end(await compare(ref))
+      } catch (error) {
+        response.writeHead(400, { 'Content-Type': 'application/json' })
         response.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }))
       }
       return

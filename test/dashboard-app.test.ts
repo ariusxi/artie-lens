@@ -48,7 +48,7 @@ describe('dashboard client app', () => {
   it('renders header, six tabs and KPIs from the embedded model', () => {
     const doc = boot().window.document
 
-    expect(doc.querySelectorAll('.tab')).toHaveLength(9)
+    expect(doc.querySelectorAll('.tab')).toHaveLength(10)
     expect(doc.querySelector('.pill')!.textContent).toContain('fail') // a CRITICAL and a violation
     expect(doc.querySelector('.kpi .val')!.textContent).toBe('1') // criticals KPI is first
     expect(doc.body.textContent).toContain('OrderService')
@@ -176,6 +176,25 @@ describe('dashboard client app', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(doc.body.textContent).toContain('ghostExport')
+  })
+
+  it('compares against a ref on the live dashboard and renders the deltas', async () => {
+    const dom = boot({ live: true })
+    const doc = dom.window.document
+    let requested = ''
+    ;(dom.window as any).fetch = (url: string) => {
+      requested = url
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ ref: 'main', base: { criticals: 2, warnings: 1 }, head: { criticals: 1, warnings: 1 }, deltas: [{ metric: 'wmc', value: 'OrderService', file: 'src/order.ts', fromLabel: 'WARNING', toLabel: 'CRITICAL', fromTotal: 12, toTotal: 21, change: 'worse' }] }) })
+    }
+
+    ;(doc.querySelector('[data-tab="compare"]') as HTMLElement).click()
+    ;(doc.querySelector('[data-compare]') as HTMLElement).click()
+
+    expect(requested).toBe('/compare?ref=main')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(doc.querySelector('.chg.worse')).toBeTruthy()
+    expect(doc.body.textContent).toContain('OrderService')
   })
 
   it('renders the config form from the embedded config', () => {

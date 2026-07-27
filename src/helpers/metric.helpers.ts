@@ -8,6 +8,7 @@ import { createAnalysisProject } from './project.helpers'
 import { getCoupledClasses } from './coupling.helpers'
 import { getCohesionLength } from './cohesion.helpers'
 import { getWeightedMethods } from './complexity.helpers'
+import { getCognitiveComplexity } from './cognitive.helpers'
 import { getDepthOfInheritance, getNumberOfChildren } from './inheritance.helpers'
 import { getResponseSetLength } from './response-set.helpers'
 import { buildModuleGraph, findCycleSizes } from './module.helpers'
@@ -36,6 +37,11 @@ export const metricInsights: Record<string, Record<string, string>> = {
     OK: 'Complexity is under control.',
     WARNING: 'Complexity is increasing → consider extracting helper methods or simplifying logic.',
     CRITICAL: 'High complexity → difficult to test and maintain. Suggestion: refactor into smaller methods or delegate responsibilities to services.',
+  },
+  cognitive: {
+    OK: 'Cognitive load is low. The code reads top to bottom.',
+    WARNING: 'Cognitive load is climbing → deep nesting or many branches make it harder to follow.',
+    CRITICAL: 'Very hard to follow → flatten the nesting and extract methods. Suggestion: early returns and guard clauses over nested conditionals.',
   },
   cbo: {
     OK: 'Coupling level is acceptable.',
@@ -141,6 +147,7 @@ export const metricRegistry: Record<string, ContextMetric> = {
   rfc: classMetric(getResponseSetLength),
   lcom: classMetric(getCohesionLength),
   wmc: classMetric(getWeightedMethods),
+  cognitive: classMetric(getCognitiveComplexity),
   dit: classMetric(getDepthOfInheritance),
   noc: classMetric(getNumberOfChildren),
   ce: moduleMetric(efferentCoupling),

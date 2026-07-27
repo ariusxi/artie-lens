@@ -16,6 +16,11 @@ export const configTemplate = {
         warning: 10,
         critical: 25
       },
+      cognitive: {
+        enabled: true,
+        warning: 15,
+        critical: 30
+      },
       rfc: {
         enabled: true,
         warning: 15,

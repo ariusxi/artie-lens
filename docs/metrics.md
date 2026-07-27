@@ -11,6 +11,7 @@ Measured **per class**, following _A Metrics Suite for Object Oriented Design_
 | Metric | Name | What it measures | High value suggests |
 | --- | --- | --- | --- |
 | **WMC** | Weighted Methods per Class | Sum of the cyclomatic complexity of each method (constructors, accessors and arrow-function fields included). With trivial methods it equals the method count. | The class is doing too much; hard to test and maintain. |
+| **COGNITIVE** | Cognitive Complexity | Sum, over the class's methods, of Campbell/SonarSource cognitive complexity: every control structure adds one, plus one for each level of nesting it sits inside, and each boolean sequence adds one. | The code is hard to *read*: deep nesting and tangled branches rather than just many of them. |
 | **DIT** | Depth of Inheritance Tree | Length of the `extends` chain up to the root (a root class is `0`). | Behavior is harder to predict; many inherited methods. |
 | **NOC** | Number of Children | Number of **immediate** subclasses (direct children only). | Possible misuse of subclassing or a leaky base abstraction. |
 | **CBO** | Coupling Between Object classes | Number of **other classes** the class depends on, via heritage, parameter/property/return types, and usages inside method bodies (`new`, calls, member access). | Fragile design; changes elsewhere ripple in. |

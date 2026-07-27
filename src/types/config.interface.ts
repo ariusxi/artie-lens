@@ -58,6 +58,7 @@ export interface ArtieConfig {
     defaultThresholds: Thresholds
     metrics: Record<string, MetricConfig>
     ignoreReExports?: boolean
+    deadCode?: { entries?: string[] }
   }
 }
 

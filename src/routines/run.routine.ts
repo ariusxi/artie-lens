@@ -9,6 +9,7 @@ import { DEFAULT_SINCE, getChurn, getCurrentCommit } from '../helpers/git.helper
 import { computeHotspots } from '../helpers/hotspot.helpers'
 import { computeSeams, findCommunities } from '../helpers/seam.helpers'
 import { cohesionFromContext, cyclesFromContext } from '../helpers/suggest.helpers'
+import { findDeadExports } from '../helpers/dead.helpers'
 import { appendSnapshot, buildSnapshot, DEFAULT_HISTORY, readHistory } from '../helpers/trend.helpers'
 import { printMetricFiles, printMetricSummary, printRegressions, printViolations } from './report.printer'
 import { existsSync, writeFileSync } from 'fs'
@@ -65,9 +66,10 @@ export const assembleDashboardData = (
   const seams = collected.context ? computeSeams(collected.context.graph, findCommunities(collected.context.graph)) : []
   const cycles = collected.context ? cyclesFromContext(collected.context) : []
   const cohesion = collected.context ? cohesionFromContext(collected.context) : []
+  const config = readConfigSafe()
+  const deadCode = collected.context ? findDeadExports(collected.context, config?.options.deadCode?.entries ?? []) : []
   const historyPath = options.record ?? DEFAULT_HISTORY
   const history = existsSync(historyPath) ? readHistory(historyPath) : []
-  const config = readConfigSafe()
 
   return {
     report: collected.report,
@@ -79,6 +81,7 @@ export const assembleDashboardData = (
     history,
     cycles,
     cohesion,
+    deadCode,
     config,
   }
 }

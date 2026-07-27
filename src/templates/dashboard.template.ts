@@ -1,4 +1,5 @@
 import { ArtieConfig, Hotspot, MetricResult, RuleViolation, Seam, Snapshot } from '../types/config.interface'
+import { DeadExport } from '../helpers/dead.helpers'
 import { DICTIONARY, LANGUAGES } from './i18n'
 
 export interface DashboardMetric {
@@ -20,6 +21,7 @@ export interface DashboardModel {
   history: Snapshot[]
   cycles: { size: number; path: string[] }[]
   cohesion: { value: string; groups: { methods: string[]; variables: string[] }[] }[]
+  deadCode: DeadExport[]
   config: ArtieConfig | null
 }
 
@@ -513,6 +515,18 @@ function processConfig(){
     .catch(function(err){clearTimeout(guard);state.processing=false;state.awaitingConfig=false;state.cfgError=String(err&&err.message?err.message:err);render();});
 }
 
+function deadTab(){
+  var rows=M.deadCode.map(function(d){return {name:d.name,kind:d.kind,line:d.line,file:d.file,_file:d.file};});
+  if(!rows.length)return '<div class="panel"><div class="empty"><b>'+esc(t('clean'))+'</b>'+esc(t('no_dead'))+'</div></div>';
+  var tbl=table('dead',[
+    {key:'name',label:t('col_symbol'),cell:function(r){return esc(r.name);}},
+    {key:'kind',label:t('col_kind'),cell:function(r){return '<span class="mut">'+esc(r.kind)+'</span>';}},
+    {key:'file',label:t('col_file'),cell:function(r){return '<span class="path" dir="rtl" title="'+esc(r.file)+'">'+esc(r.file)+'</span>';}},
+    {key:'line',label:t('col_line'),num:true,cls:'num mut',cell:function(r){return r.line;}}
+  ],rows);
+  return '<div class="panel"><h2>'+esc(t('tab_dead'))+' <span class="sub">'+esc(t('dead_sub'))+'</span></h2>'+toolbar('dead')+tbl+'<div class="body"><p class="fnote">'+esc(t('dead_hint'))+'</p></div></div>';
+}
+
 var TABS=[
   {id:'overview',view:overview,count:function(){return null;}},
   {id:'metrics',view:metricsTab,count:function(){return M.metrics.length;}},
@@ -520,6 +534,7 @@ var TABS=[
   {id:'modules',view:modulesTab,count:function(){return rollupRows().length;}},
   {id:'seams',view:seamsTab,count:function(){return M.seams.length;}},
   {id:'violations',view:violationsTab,count:function(){return M.violations.length+M.cycles.length;}},
+  {id:'dead',view:deadTab,count:function(){return M.deadCode.length;}},
   {id:'config',view:configTab,count:function(){return null;}}
 ];
 

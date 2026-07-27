@@ -117,6 +117,13 @@ const en: Dictionary = {
   cfg_error: 'Could not apply the configuration.',
   cfg_live_only: 'Editing needs the live dashboard: run artie dashboard.',
   cfg_none: 'No configuration loaded.',
+  tab_dead: 'Dead code',
+  dead_sub: 'exported but never imported anywhere',
+  no_dead: 'No unused exports.',
+  col_symbol: 'symbol',
+  col_kind: 'kind',
+  col_line: 'line',
+  dead_hint: 'Public API? List those files under options.deadCode.entries.',
 }
 
 const zh: Dictionary = {
@@ -212,6 +219,13 @@ const zh: Dictionary = {
   cfg_error: '无法应用配置。',
   cfg_live_only: '编辑需要实时面板：运行 artie dashboard。',
   cfg_none: '未加载配置。',
+  tab_dead: '死代码',
+  dead_sub: '已导出但从未被任何地方导入',
+  no_dead: '没有未使用的导出。',
+  col_symbol: '符号',
+  col_kind: '类型',
+  col_line: '行',
+  dead_hint: '属于公共 API？把这些文件列入 options.deadCode.entries。',
 }
 
 const hi: Dictionary = {
@@ -307,6 +321,13 @@ const hi: Dictionary = {
   cfg_error: 'कॉन्फ़िगरेशन लागू नहीं हो सका।',
   cfg_live_only: 'संपादन के लिए लाइव डैशबोर्ड चाहिए: artie dashboard चलाएँ।',
   cfg_none: 'कोई कॉन्फ़िगरेशन लोड नहीं।',
+  tab_dead: 'मृत कोड',
+  dead_sub: 'निर्यात किया गया पर कहीं इम्पोर्ट नहीं',
+  no_dead: 'कोई अप्रयुक्त निर्यात नहीं।',
+  col_symbol: 'सिंबल',
+  col_kind: 'प्रकार',
+  col_line: 'लाइन',
+  dead_hint: 'पब्लिक API? उन फ़ाइलों को options.deadCode.entries में डालें।',
 }
 
 const es: Dictionary = {
@@ -402,6 +423,13 @@ const es: Dictionary = {
   cfg_error: 'No se pudo aplicar la configuración.',
   cfg_live_only: 'La edición requiere el panel en vivo: ejecuta artie dashboard.',
   cfg_none: 'Sin configuración cargada.',
+  tab_dead: 'Código muerto',
+  dead_sub: 'exportado pero nunca importado',
+  no_dead: 'Sin exportaciones sin usar.',
+  col_symbol: 'símbolo',
+  col_kind: 'tipo',
+  col_line: 'línea',
+  dead_hint: '¿API pública? Lista esos archivos en options.deadCode.entries.',
 }
 
 const fr: Dictionary = {
@@ -497,6 +525,13 @@ const fr: Dictionary = {
   cfg_error: 'Impossible d’appliquer la configuration.',
   cfg_live_only: 'L’édition nécessite le tableau de bord en direct : lancez artie dashboard.',
   cfg_none: 'Aucune configuration chargée.',
+  tab_dead: 'Code mort',
+  dead_sub: 'exporté mais jamais importé',
+  no_dead: 'Aucun export inutilisé.',
+  col_symbol: 'symbole',
+  col_kind: 'type',
+  col_line: 'ligne',
+  dead_hint: 'API publique ? Listez ces fichiers dans options.deadCode.entries.',
 }
 
 const ar: Dictionary = {
@@ -592,6 +627,13 @@ const ar: Dictionary = {
   cfg_error: 'تعذّر تطبيق الإعداد.',
   cfg_live_only: 'يتطلب التعديل اللوحة المباشرة: شغّل artie dashboard.',
   cfg_none: 'لا يوجد إعداد محمّل.',
+  tab_dead: 'شيفرة ميتة',
+  dead_sub: 'مُصدَّر لكن لا يُستورد في أي مكان',
+  no_dead: 'لا صادرات غير مستخدمة.',
+  col_symbol: 'الرمز',
+  col_kind: 'النوع',
+  col_line: 'السطر',
+  dead_hint: 'واجهة عامة؟ أدرج هذه الملفات في options.deadCode.entries.',
 }
 
 const bn: Dictionary = {
@@ -687,6 +729,13 @@ const bn: Dictionary = {
   cfg_error: 'কনফিগারেশন প্রয়োগ করা যায়নি।',
   cfg_live_only: 'সম্পাদনার জন্য লাইভ ড্যাশবোর্ড দরকার: artie dashboard চালান।',
   cfg_none: 'কোনো কনফিগারেশন লোড হয়নি।',
+  tab_dead: 'ডেড কোড',
+  dead_sub: 'এক্সপোর্ট হয়েছে কিন্তু কোথাও ইম্পোর্ট হয়নি',
+  no_dead: 'কোনো অব্যবহৃত এক্সপোর্ট নেই।',
+  col_symbol: 'সিম্বল',
+  col_kind: 'ধরন',
+  col_line: 'লাইন',
+  dead_hint: 'পাবলিক API? সেই ফাইলগুলো options.deadCode.entries-এ দিন।',
 }
 
 const pt: Dictionary = {
@@ -782,6 +831,13 @@ const pt: Dictionary = {
   cfg_error: 'Não foi possível aplicar a configuração.',
   cfg_live_only: 'A edição precisa do dashboard ao vivo: rode artie dashboard.',
   cfg_none: 'Nenhuma configuração carregada.',
+  tab_dead: 'Código morto',
+  dead_sub: 'exportado mas nunca importado',
+  no_dead: 'Nenhum export sem uso.',
+  col_symbol: 'símbolo',
+  col_kind: 'tipo',
+  col_line: 'linha',
+  dead_hint: 'API pública? Liste esses arquivos em options.deadCode.entries.',
 }
 
 const ru: Dictionary = {
@@ -877,6 +933,13 @@ const ru: Dictionary = {
   cfg_error: 'Не удалось применить конфигурацию.',
   cfg_live_only: 'Редактирование требует живой панели: запустите artie dashboard.',
   cfg_none: 'Конфигурация не загружена.',
+  tab_dead: 'Мёртвый код',
+  dead_sub: 'экспортируется, но нигде не импортируется',
+  no_dead: 'Нет неиспользуемых экспортов.',
+  col_symbol: 'символ',
+  col_kind: 'тип',
+  col_line: 'строка',
+  dead_hint: 'Публичный API? Укажите эти файлы в options.deadCode.entries.',
 }
 
 const ja: Dictionary = {
@@ -972,6 +1035,13 @@ const ja: Dictionary = {
   cfg_error: '設定を適用できませんでした。',
   cfg_live_only: '編集にはライブダッシュボードが必要です: artie dashboard を実行。',
   cfg_none: '設定が読み込まれていません。',
+  tab_dead: 'デッドコード',
+  dead_sub: 'エクスポートされているがどこからもインポートされていない',
+  no_dead: '未使用のエクスポートはありません。',
+  col_symbol: 'シンボル',
+  col_kind: '種類',
+  col_line: '行',
+  dead_hint: '公開API？それらのファイルを options.deadCode.entries に記載してください。',
 }
 
 export const DICTIONARY: Record<string, Dictionary> = { en, zh, hi, es, fr, ar, bn, pt, ru, ja }

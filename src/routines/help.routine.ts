@@ -10,6 +10,7 @@ const HELP_LINES = [
   '  suggest [dir]     Print concrete refactoring suggestions (cycles, low cohesion)',
   '  hotspots [dir]    Rank files that are unhealthy AND frequently changed (needs git)',
   '  seams [dir]       Detect module communities and propose extraction boundaries',
+  '  dead [dir]        List exports that are never imported anywhere (unused code)',
   '  comment [dir]     Post a summary of regressions and violations on the current PR (CI)',
   '  trend             Show the trajectory of recorded runs (see run --record)',
   '  dashboard [dir]   Serve a live, auto-refreshing HTML dashboard (--port, default 4300)',

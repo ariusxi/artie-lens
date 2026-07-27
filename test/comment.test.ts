@@ -3,7 +3,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { describe, expect, it } from 'vitest'
 
-import { COMMENT_MARKER, buildCommentBody } from '../src/helpers/comment.helpers'
+import { COMMENT_MARKER, buildCommentBody, CommentSummary } from '../src/helpers/comment.helpers'
 import { getPullRequestContext } from '../src/helpers/github.helpers'
 import { Regression, RuleViolation } from '../src/types/config.interface'
 
@@ -12,18 +12,39 @@ const regression = (metric: string, value: string): Regression =>
 
 const violation = (from: string, to: string): RuleViolation => ({ from, to, message: `${from} must not import ${to}` })
 
+const summary = (over: Partial<CommentSummary> = {}): CommentSummary =>
+  ({ metrics: 7, criticals: 0, warnings: 0, offenders: [], hotspots: [], violations: [], regressions: [], ...over })
+
 describe('buildCommentBody', () => {
   it('reports a clean result', () => {
-    const body = buildCommentBody([], [])
+    const body = buildCommentBody(summary())
 
     expect(body.startsWith(COMMENT_MARKER)).toBe(true)
-    expect(body).toContain('✅ No new regressions or architecture violations.')
+    expect(body).toContain('✅ Clean: no criticals, warnings or violations across 7 metrics.')
   })
 
-  it('lists violations and regressions with a count', () => {
-    const body = buildCommentBody([regression('wmc', 'OrderService')], [violation('src/domain/a.ts', 'src/infra/b.ts')])
+  it('leads with a KPI line and the worst offenders and hotspots', () => {
+    const body = buildCommentBody(summary({
+      criticals: 2,
+      warnings: 3,
+      offenders: [{ metric: 'wmc', value: 'OrderService', total: 30, label: 'CRITICAL' }],
+      hotspots: [{ file: 'src/order.ts', churn: 10, badness: 3, score: 90, findings: [] }],
+    }))
 
-    expect(body).toContain('❌ 2 issue(s) to review.')
+    expect(body).toContain('**2 criticals**, **3 warnings**, **0 violations** across 7 metrics.')
+    expect(body).toContain('Worst offenders')
+    expect(body).toContain('WMC `OrderService`: 30')
+    expect(body).toContain('Top hotspots')
+    expect(body).toContain('`src/order.ts`: score 90 (10 changes)')
+  })
+
+  it('keeps the violations and regressions gate sections', () => {
+    const body = buildCommentBody(summary({
+      warnings: 1,
+      violations: [violation('src/domain/a.ts', 'src/infra/b.ts')],
+      regressions: [regression('wmc', 'OrderService')],
+    }))
+
     expect(body).toContain('Architecture violations (1)')
     expect(body).toContain('`src/domain/a.ts` → `src/infra/b.ts`')
     expect(body).toContain('Regressions vs baseline (1)')

@@ -44,10 +44,16 @@ artie run --html=report.html
 
 ## Pull request comments
 
-Instead of only failing the build, `artie comment` posts a sticky summary of the regressions
-and architecture violations on the pull request, updating the same comment on each push instead
-of adding new ones. It also gates: with `--fail-on`, it exits `1` when there is something to
-review, so the check still blocks the PR.
+Instead of only failing the build, `artie comment` posts a sticky summary of the analysis on the
+pull request, updating the same comment on each push instead of adding new ones. The summary leads
+with the headline counts (criticals, warnings, violations across N metrics), then the worst
+offenders and the top hotspots (complexity crossed with churn), followed by the gate sections:
+architecture violations and, with a baseline, the regressions. A clean run posts a short green
+line. It also gates: with `--fail-on`, it exits `1` when there is something to review, so the
+check still blocks the PR.
+
+Hotspots need commit history, so give the checkout enough depth (for example
+`actions/checkout` with `fetch-depth: 0`) if you want them in the comment.
 
 It reads the PR context from the environment GitHub Actions provides (`GITHUB_TOKEN`,
 `GITHUB_REPOSITORY`, and the event payload), and needs `pull-requests: write` permission.

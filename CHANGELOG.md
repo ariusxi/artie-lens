@@ -1,3 +1,19 @@
+# [1.20.0](https://github.com/ariusxi/artie-lens/compare/v1.19.0...v1.20.0) (2026-07-27)
+
+
+### Features
+
+* **comment:** post an analysis summary on the PR, not just the gate ([6d570f1](https://github.com/ariusxi/artie-lens/commit/6d570f12aa2608916c026d2ff96c836d2df05a1d))
+* **compare:** diff the working tree against a git ref ([f0e14bb](https://github.com/ariusxi/artie-lens/commit/f0e14bbba39ffde41c6e09e8ca8283e49b751976))
+* **dead-code:** detect and report exports nothing imports ([1c60ab7](https://github.com/ariusxi/artie-lens/commit/1c60ab7cec60b268676e133623c60a0929b7f2a8))
+* **metrics:** add cognitive complexity, a readability metric ([0ea203d](https://github.com/ariusxi/artie-lens/commit/0ea203df44e6c4620c44013560d8bcbee697cd8d))
+* **risk:** rank hotspots by missing test coverage ([4b8aab6](https://github.com/ariusxi/artie-lens/commit/4b8aab68245f3791ae6eedd6502201097000df0e))
+
+
+### Performance Improvements
+
+* **dashboard:** compute dead code lazily on the live server ([d50ace8](https://github.com/ariusxi/artie-lens/commit/d50ace8d0ed2f3d330a25cd3a7981f2b60d51910))
+
 # [1.19.0](https://github.com/ariusxi/artie-lens/compare/v1.18.1...v1.19.0) (2026-07-23)
 
 

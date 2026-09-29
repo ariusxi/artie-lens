@@ -1,3 +1,10 @@
+## [1.20.1](https://github.com/ariusxi/artie-lens/compare/v1.20.0...v1.20.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* clarify package metadata and maintain v1 tag ([7565dce](https://github.com/ariusxi/artie-lens/commit/7565dce6d1215513687945b617d8406f1dec4ce1))
+
 # [1.20.0](https://github.com/ariusxi/artie-lens/compare/v1.19.0...v1.20.0) (2026-07-27)
 
 

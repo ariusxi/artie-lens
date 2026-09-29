@@ -57,3 +57,39 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Update v1 major tag
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          release_tag="$(git tag --list 'v1.*.*' --sort=-version:refname | sed -n '1p')"
+          if [[ -z "$release_tag" ]]; then
+            echo "No v1 release tag found; leaving the v1 major tag unchanged."
+            exit 0
+          fi
+
+          release_sha="$(git rev-list -n 1 "$release_tag")"
+          current_sha="$(git rev-parse --verify 'refs/tags/v1^{}' 2>/dev/null || true)"
+          if [[ "$current_sha" == "$release_sha" ]]; then
+            echo "v1 already points to $release_tag ($release_sha)."
+            exit 0
+          fi
+
+          if [[ -n "$current_sha" ]]; then
+            gh api \
+              --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/git/refs/tags/v1" \
+              -f sha="$release_sha" \
+              -F force=true >/dev/null
+          else
+            gh api \
+              --method POST \
+              "repos/${GITHUB_REPOSITORY}/git/refs" \
+              -f ref='refs/tags/v1' \
+              -f sha="$release_sha" >/dev/null
+          fi
+
+          echo "Updated v1 to $release_tag ($release_sha)."

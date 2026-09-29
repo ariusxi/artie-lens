@@ -4,6 +4,8 @@
 [![CI](https://github.com/ariusxi/artie-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/ariusxi/artie-lens/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
+Artie-Lens is a **static analysis** tool for software architecture and design; it does not collect telemetry or monitor runtime behavior.
+
 Measure **design quality** in a TypeScript codebase, and fail CI when it gets worse.
 
 Artie-Lens reads your code from the AST (via ts-morph) and answers three different questions:

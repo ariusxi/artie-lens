@@ -722,7 +722,7 @@ render();
 `
 
 const LIVE_SCRIPT =
-  '<script>(function(){var s=new EventSource("/events?token="+encodeURIComponent(window.__ARTIE_TOKEN__||""));s.onmessage=function(e){try{window.__artieApply(JSON.parse(e.data))}catch(_){location.reload()}};})();</script>'
+  '<script>(function(){if(typeof EventSource==="undefined")return;var s=new EventSource("/events?token="+encodeURIComponent(window.__ARTIE_TOKEN__||""));s.onmessage=function(e){try{window.__artieApply(JSON.parse(e.data))}catch(_){location.reload()}};})();</script>'
 
 // Set the theme attribute before the app boots so a light-preferring viewer never flashes dark.
 const BOOT_SCRIPT =

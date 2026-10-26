@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { JSDOM } from 'jsdom'
+import { JSDOM, VirtualConsole } from 'jsdom'
 
 import { buildDashboard, DashboardData } from '../src/helpers/report.dashboard'
 import { Hotspot, MetricReport, RuleViolation } from '../src/types/config.interface'
@@ -39,9 +39,9 @@ const config = {
   excludes: ['node_modules'],
 }
 
-const boot = (overrides: Partial<DashboardData> = {}): JSDOM => {
+const boot = (overrides: Partial<DashboardData> = {}, virtualConsole?: VirtualConsole): JSDOM => {
   const html = buildDashboard({ report, violations, hotspots, cycles, deadCode, risk, hasCoverage: true, config, generatedAt: '2026-01-01T00:00:00Z', live: false, ...overrides }, 'test-token')
-  return new JSDOM(html, { runScripts: 'dangerously', url: 'https://artie.test/' })
+  return new JSDOM(html, { runScripts: 'dangerously', url: 'https://artie.test/', virtualConsole })
 }
 
 describe('dashboard client app', () => {
@@ -120,6 +120,17 @@ describe('dashboard client app', () => {
 
   it('omits the live channel when not live', () => {
     expect(boot({ live: false }).window.document.documentElement.outerHTML).not.toContain('EventSource')
+  })
+
+  it('boots the live dashboard when EventSource is unavailable', () => {
+    const errors: Error[] = []
+    const virtualConsole = new VirtualConsole()
+    virtualConsole.on('jsdomError', (error) => errors.push(error))
+
+    const dom = boot({ live: true }, virtualConsole)
+
+    expect(dom.window.document.querySelector('[data-tab="overview"]')).toBeTruthy()
+    expect(errors).toEqual([])
   })
 
   it('draws each dependency cycle as a node-link graph', () => {

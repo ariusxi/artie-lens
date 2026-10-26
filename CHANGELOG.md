@@ -1,3 +1,13 @@
+## [1.20.2](https://github.com/ariusxi/artie-lens/compare/v1.20.1...v1.20.2) (2026-10-26)
+
+
+### Bug Fixes
+
+* derive churn paths from git prefix ([7586980](https://github.com/ariusxi/artie-lens/commit/7586980b60fe007cc0308c3f08b16b54286cd1a3))
+* guard dashboard live channel without EventSource ([fbadf0d](https://github.com/ariusxi/artie-lens/commit/fbadf0d9382bfffe0b24b995665aa2ddaa085cd4))
+* harden analysis and release workflows ([4abab79](https://github.com/ariusxi/artie-lens/commit/4abab79802efa921999d1e06b82392fa16bc3164))
+* normalize analysis paths on Windows ([54a4e65](https://github.com/ariusxi/artie-lens/commit/54a4e65c80e4bc6f9a2359ade671810c54c4b24c))
+
 ## [1.20.1](https://github.com/ariusxi/artie-lens/compare/v1.20.0...v1.20.1) (2026-09-29)
 
 

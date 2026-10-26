@@ -2,6 +2,8 @@ import fg from 'fast-glob'
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 
+export const normalizeReportPath = (path: string): string => path.replace(/\\/g, '/')
+
 export const getSourceFiles = (directory: string, includes: string[], excludes: string[]): Promise<string[]> =>
   fg(includes, {
     cwd: directory,

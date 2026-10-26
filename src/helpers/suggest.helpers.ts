@@ -1,4 +1,5 @@
 import { relative } from 'path'
+import { normalizeReportPath } from './file.helpers'
 
 import { AnalysisContext, buildAnalysisContext } from './metric.helpers'
 import { getCohesionGroups } from './cohesion.helpers'
@@ -17,7 +18,7 @@ export interface CohesionSuggestion {
 export const cyclesFromContext = (context: AnalysisContext): CycleSuggestion[] =>
   findCycleGroups(context.graph).map((group) => ({
     size: group.length,
-    path: findCyclePath(context.graph, group).map((path) => relative(context.directory, path)),
+    path: findCyclePath(context.graph, group).map((path) => normalizeReportPath(relative(context.directory, path))),
   }))
 
 export const cohesionFromContext = (context: AnalysisContext): CohesionSuggestion[] => {

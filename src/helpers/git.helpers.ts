@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto'
 import { realpathSync } from 'fs'
 import { tmpdir } from 'os'
 import { join, relative } from 'path'
+import { normalizeReportPath } from './file.helpers'
 
 export const DEFAULT_SINCE = '90 days ago'
 
@@ -56,7 +57,7 @@ export const getChurn = (directory: string, since: string): Map<string, number> 
     const path = line.trim()
     if (!path) continue
 
-    const file = relative(base, join(root, path))
+    const file = normalizeReportPath(relative(base, join(root, path)))
     churn.set(file, (churn.get(file) ?? 0) + 1)
   }
 

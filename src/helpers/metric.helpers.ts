@@ -3,7 +3,7 @@ import { ClassDeclaration, SourceFile } from 'ts-morph'
 
 import { MetricConfig, MetricResult } from '../types/config.interface'
 
-import { getSourceFiles } from './file.helpers'
+import { getSourceFiles, normalizeReportPath } from './file.helpers'
 import { createAnalysisProject } from './project.helpers'
 import { getCoupledClasses } from './coupling.helpers'
 import { getCohesionLength } from './cohesion.helpers'
@@ -15,6 +15,8 @@ import { buildModuleGraph, findCycleSizes } from './module.helpers'
 import { computeMartin } from './martin.helpers'
 
 const UNNAMED_CLASS = '[UnnamedClass]'
+export { normalizeReportPath } from './file.helpers'
+export const toReportPath = (directory: string, file: string): string => normalizeReportPath(relative(directory, file))
 
 export const getMetricLabel = (total: number, metricConfig: MetricConfig): string => {
   if (total >= metricConfig.critical!) return 'CRITICAL'
@@ -109,7 +111,7 @@ const classResults = (context: AnalysisContext, metric: ClassMetric, metricConfi
   const items: MetricResult[] = []
 
   for (const sourceFile of context.sourceFiles) {
-    const file = relative(context.directory, sourceFile.getFilePath())
+    const file = toReportPath(context.directory, sourceFile.getFilePath())
 
     for (const classDeclaration of sourceFile.getClasses()) {
       const value = classDeclaration.getName() ?? UNNAMED_CLASS
@@ -128,7 +130,7 @@ const moduleResults = (context: AnalysisContext, totalsOf: ModuleTotals, metricC
 
   for (const path of context.graph.keys()) {
     const total = totals.get(path) ?? 0
-    const file = relative(context.directory, path)
+    const file = toReportPath(context.directory, path)
 
     items.push({ total, label: getMetricLabel(total, metricConfig), value: file, file })
   }
@@ -158,7 +160,7 @@ export const metricRegistry: Record<string, ContextMetric> = {
 
     for (const [path, metrics] of martin) {
       const total = Math.round(metrics.distance * 100)
-      const value = relative(context.directory, path)
+      const value = toReportPath(context.directory, path)
       items.push({ total, label: getMetricLabel(total, metricConfig), value, file: value })
     }
 

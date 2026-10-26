@@ -1,4 +1,6 @@
 import { execFileSync } from 'child_process'
+import { appendFileSync } from 'fs'
+import { join } from 'path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { computeHotspots } from '../src/helpers/hotspot.helpers'
@@ -72,7 +74,7 @@ describe('getChurn', () => {
     git('add', '-A')
     git('commit', '-m', 'init')
 
-    execFileSync('bash', ['-c', `echo "export const a2 = 2" >> ${directory}/a.ts`])
+    appendFileSync(join(directory, 'a.ts'), '\nexport const a2 = 2\n')
     git('commit', '-am', 'change a')
 
     const churn = getChurn(directory, '10 years ago')

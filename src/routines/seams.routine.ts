@@ -1,4 +1,5 @@
 import { relative } from 'path'
+import { normalizeReportPath } from '../helpers/file.helpers'
 
 import { RunOptions } from '../types/config.interface'
 import { printMetric } from '../helpers/print.helpers'
@@ -21,7 +22,7 @@ export const seamLens = async (directory = process.cwd(), options: RunOptions = 
   if (!context) return console.log('No source files found.')
 
   const seams = computeSeams(context.graph, findCommunities(context.graph))
-  const relativeSeams = seams.map((seam) => ({ ...seam, modules: seam.modules.map((module) => relative(directory, module)) }))
+  const relativeSeams = seams.map((seam) => ({ ...seam, modules: seam.modules.map((module) => normalizeReportPath(relative(directory, module))) }))
 
   if (options.json) return console.log(JSON.stringify({ seams: relativeSeams }, null, 2))
 

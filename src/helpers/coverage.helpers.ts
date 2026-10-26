@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'fs'
 import { isAbsolute, relative, resolve } from 'path'
+import { normalizeReportPath } from './file.helpers'
 
 export const DEFAULT_COVERAGE = 'coverage/lcov.info'
 
@@ -61,7 +62,7 @@ export const readCoverage = (path: string, directory: string): Map<string, numbe
   const byFile = new Map<string, number>()
   for (const [sourceFile, coverage] of parseLcov(readFileSync(path, 'utf-8'))) {
     const absolute = isAbsolute(sourceFile) ? sourceFile : resolve(directory, sourceFile)
-    byFile.set(relative(directory, absolute), coverage.pct)
+    byFile.set(normalizeReportPath(relative(directory, absolute)), coverage.pct)
   }
 
   return byFile

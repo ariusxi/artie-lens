@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { calculateCBO, calculateCE, calculateCyclic, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC } from '../src/helpers/metric.helpers'
+import { calculateCBO, calculateCE, calculateCyclic, calculateDIT, calculateLCOM, calculateNOC, calculateRFC, calculateWMC, normalizeReportPath } from '../src/helpers/metric.helpers'
 import { cleanupProjects, createProject, thresholds, totalOf } from './utils'
 
 const run = (fn: typeof calculateWMC, directory: string) => fn(directory, thresholds, ['**/*.ts'], [])
@@ -305,6 +305,10 @@ describe('type-only imports', () => {
 })
 
 describe('tsconfig path aliases', () => {
+  it('normalizes Windows paths in reports', () => {
+    expect(normalizeReportPath('src\\domain\\a.ts')).toBe('src/domain/a.ts')
+  })
+
   it('resolves imports through tsconfig paths so coupling is counted', async () => {
     const directory = createProject({
       'tsconfig.json': `{ "compilerOptions": { "baseUrl": ".", "paths": { "@/*": ["src/*"] } } }`,

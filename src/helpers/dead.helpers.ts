@@ -1,6 +1,7 @@
 import { relative } from 'path'
 import { Identifier, Node, SourceFile } from 'ts-morph'
 import picomatch from 'picomatch'
+import { normalizeReportPath } from './file.helpers'
 
 import { AnalysisContext } from './metric.helpers'
 
@@ -54,7 +55,7 @@ export const findDeadExports = (context: AnalysisContext, entries: string[] = []
   const dead: DeadExport[] = []
 
   for (const sourceFile of context.sourceFiles) {
-    const file = relative(context.directory, sourceFile.getFilePath())
+    const file = normalizeReportPath(relative(context.directory, sourceFile.getFilePath()))
     if (isEntry(file)) continue
 
     for (const item of collectExports(sourceFile)) {

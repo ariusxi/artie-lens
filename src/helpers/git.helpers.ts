@@ -1,8 +1,7 @@
 import { spawnSync } from 'child_process'
 import { randomBytes } from 'crypto'
-import { realpathSync } from 'fs'
 import { tmpdir } from 'os'
-import { join, relative } from 'path'
+import { join } from 'path'
 import { normalizeReportPath } from './file.helpers'
 
 export const DEFAULT_SINCE = '90 days ago'
@@ -42,22 +41,21 @@ export const getCurrentCommit = (directory: string): string => {
 // Counts how many commits touched each file in the given window. Returns paths relative to
 // the analyzed directory, or null when the directory is not a git repository.
 export const getChurn = (directory: string, since: string): Map<string, number> | null => {
-  const root = getRepositoryRoot(directory)
-  if (!root) return null
+  const prefixOutput = runGit(directory, ['rev-parse', '--show-prefix'])
+  if (prefixOutput === null) return null
+  const prefix = normalizeReportPath(prefixOutput.trim())
 
-  const output = runGit(directory, ['log', `--since=${since}`, '--name-only', '--format='])
+  const output = runGit(directory, ['log', `--since=${since}`, '--name-only', '--format=', '--', '.'])
   if (output === null) return null
 
-  // git resolves symlinks (on macOS /var is a symlink to /private/var), so the analyzed
-  // directory has to be resolved too or the relative paths will not line up.
-  const base = realpathSync(directory)
   const churn = new Map<string, number>()
 
   for (const line of output.split('\n')) {
-    const path = line.trim()
+    const path = normalizeReportPath(line.trim())
     if (!path) continue
+    if (prefix && !path.startsWith(prefix)) continue
 
-    const file = normalizeReportPath(relative(base, join(root, path)))
+    const file = prefix ? path.slice(prefix.length) : path
     churn.set(file, (churn.get(file) ?? 0) + 1)
   }
 

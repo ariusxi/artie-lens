@@ -88,4 +88,18 @@ describe('getChurn', () => {
 
     expect(getChurn(directory, '10 years ago')).toBeNull()
   })
+
+  it('returns paths relative to an analyzed repository subdirectory', () => {
+    const directory = createProject({ 'package/a.ts': 'export const a = 1', 'outside.ts': 'export const outside = 1' })
+    const git = (...args: string[]) => execFileSync('git', ['-C', directory, ...args], { stdio: 'ignore' })
+    git('init')
+    git('config', 'user.email', 'test@test.com')
+    git('config', 'user.name', 'test')
+    git('add', '-A')
+    git('commit', '-m', 'init')
+
+    const churn = getChurn(join(directory, 'package'), '10 years ago')
+
+    expect(churn).toEqual(new Map([['a.ts', 1]]))
+  })
 })

@@ -29,7 +29,7 @@ inputs:
   version:
     description: 'artie-lens version to run via npx'
     required: false
-    default: 'latest'
+    default: '1'
   node-version:
     description: 'Node.js version to set up'
     required: false
@@ -38,7 +38,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
       with:
         node-version: ${{ inputs.node-version }}
 

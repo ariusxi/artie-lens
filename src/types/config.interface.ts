@@ -107,6 +107,7 @@ export interface MetricReport {
 export interface Regression {
   metric: string
   value: string
+  file?: string
   from: string
   to: string
   fromTotal: number

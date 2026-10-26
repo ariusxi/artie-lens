@@ -203,7 +203,7 @@ input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:po
 // the live channel can push a new model and have the view diff-and-repaint in place.
 const APP = String.raw`
 (function(){
-var M=window.__ARTIE__;var prev=null;var changed={};
+var M=window.__ARTIE__;var TOKEN=window.__ARTIE_TOKEN__||'';var prev=null;var changed={};
 var app=document.getElementById('app');
 var I18N=window.__I18N__||{dict:{en:{}},langs:[{code:'en',name:'English'}]};
 var DICT=I18N.dict;var LANGS=I18N.langs;
@@ -235,6 +235,11 @@ function fileOf(e){return e.file||'';}
 function baseName(p){var s=p.split('/');return s[s.length-1];}
 function metricName(name){return t('m_'+name);}
 function localDate(iso){return new Date(iso).toLocaleString(lang);}
+function apiFetch(path,init){
+  init=init||{};var headers=init.headers||{};
+  if(TOKEN)headers['X-Artie-Token']=TOKEN;
+  init.headers=headers;return fetch(path,init);
+}
 
 var fileIndex={};var cohesionByValue={};
 function reindex(){
@@ -518,7 +523,7 @@ function loadCompare(){
   if(!M.live||state.compareLoading)return;
   var ref=state.compareRef||'main';
   state.compareLoading=true;state.compareError='';render();
-  fetch('/compare?ref='+encodeURIComponent(ref)).then(function(r){if(r.ok)return r.json();return r.json().then(function(e){throw new Error(e&&e.error?e.error:'HTTP '+r.status);});})
+  apiFetch('/compare?ref='+encodeURIComponent(ref)).then(function(r){if(r.ok)return r.json();return r.json().then(function(e){throw new Error(e&&e.error?e.error:'HTTP '+r.status);});})
     .then(function(d){compareData=d;state.compareLoading=false;render();})
     .catch(function(err){state.compareLoading=false;state.compareError=String(err&&err.message?err.message:err);render();});
 }
@@ -581,7 +586,7 @@ function processConfig(){
   var cfg=collectConfigForm();
   state.processing=true;state.awaitingConfig=true;state.cfgError='';state.cfgSaved=false;render();
   var guard=setTimeout(function(){if(state.processing){state.processing=false;state.awaitingConfig=false;state.cfgError='timeout';render();}},25000);
-  fetch('/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)})
+  apiFetch('/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)})
     .then(function(r){if(r.ok)return;return r.json().then(function(e){throw new Error(e&&e.error?e.error:'HTTP '+r.status);});})
     .catch(function(err){clearTimeout(guard);state.processing=false;state.awaitingConfig=false;state.cfgError=String(err&&err.message?err.message:err);render();});
 }
@@ -590,7 +595,7 @@ function deadList(){return M.live?deadData:M.deadCode;}
 function loadDead(){
   if(!M.live||state.deadLoading||deadData!==null)return false;
   state.deadLoading=true;render();
-  fetch('/dead').then(function(r){return r.json();}).then(function(d){deadData=d.deadCode||[];state.deadLoading=false;render();})
+  apiFetch('/dead').then(function(r){return r.json();}).then(function(d){deadData=d.deadCode||[];state.deadLoading=false;render();})
     .catch(function(){deadData=[];state.deadLoading=false;render();});
   return true;
 }
@@ -717,7 +722,7 @@ render();
 `
 
 const LIVE_SCRIPT =
-  '<script>(function(){var s=new EventSource("/events");s.onmessage=function(e){try{window.__artieApply(JSON.parse(e.data))}catch(_){location.reload()}};})();</script>'
+  '<script>(function(){var s=new EventSource("/events?token="+encodeURIComponent(window.__ARTIE_TOKEN__||""));s.onmessage=function(e){try{window.__artieApply(JSON.parse(e.data))}catch(_){location.reload()}};})();</script>'
 
 // Set the theme attribute before the app boots so a light-preferring viewer never flashes dark.
 const BOOT_SCRIPT =
@@ -725,7 +730,7 @@ const BOOT_SCRIPT =
 
 const I18N_JSON = embed({ dict: DICTIONARY, langs: LANGUAGES })
 
-export const renderDashboard = (model: DashboardModel): string => {
+export const renderDashboard = (model: DashboardModel, accessToken = ''): string => {
   const head =
     '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
@@ -734,7 +739,7 @@ export const renderDashboard = (model: DashboardModel): string => {
     '<style>' +
     STYLE +
     '</style></head><body><div id="app"></div>'
-  const data = `<script>window.__ARTIE__=${embed(model)};window.__I18N__=${I18N_JSON}</script>`
+  const data = `<script>window.__ARTIE__=${embed(model)};window.__ARTIE_TOKEN__=${embed(accessToken)};window.__I18N__=${I18N_JSON}</script>`
   const scripts = `<script>${APP}</script>${model.live ? LIVE_SCRIPT : ''}`
 
   return `${head}${data}${scripts}</body></html>`

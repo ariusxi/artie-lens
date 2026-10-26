@@ -1,5 +1,9 @@
 # Dashboard
 
+The live server listens on `127.0.0.1` only. Its internal endpoints use an ephemeral access token
+embedded in the page, so another site cannot silently rewrite the configuration or trigger costly
+analyses through the browser.
+
 A visual, interactive report instead of the terminal list. The page ships the analysis as an
 embedded JSON model plus a small vanilla-JS app, so it is a single self-contained file with no
 network calls and nothing to install in the browser.

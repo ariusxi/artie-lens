@@ -1,5 +1,7 @@
 node_modules/
 dist/
+coverage/
+.npm-cache/
 
 artie-lens.js
 artie-lens.js.map

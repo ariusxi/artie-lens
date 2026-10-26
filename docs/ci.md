@@ -103,5 +103,5 @@ Gate on regressions instead:
 | `fail-on` | (none) | Fail the job when a class reaches `warning` or `critical`. |
 | `baseline` | (none) | `true` for the default baseline file, or a path. Reports only regressions. |
 | `json` | `false` | Print the report as JSON. |
-| `version` | `latest` | `artie-lens` version to run. |
+| `version` | `1` | `artie-lens` version to run. Pin an exact version when full reproducibility is required. |
 | `node-version` | `20` | Node.js version to set up. |

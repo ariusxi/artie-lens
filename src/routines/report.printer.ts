@@ -32,7 +32,8 @@ export const printRegressions = (regressions: Regression[], baselinePath: string
 
   console.log(`\n✖ ${regressions.length} regression(s) vs baseline (${baselinePath}):`)
   for (const item of regressions) {
-    const label = `[${item.to}] ${item.metric.toUpperCase()} ${item.value}: ${item.from} ${item.fromTotal} → ${item.to} ${item.toTotal}`
+    const location = item.file ? ` (${item.file})` : ''
+    const label = `[${item.to}] ${item.metric.toUpperCase()} ${item.value}${location}: ${item.from} ${item.fromTotal} → ${item.to} ${item.toTotal}`
     printMetric(label, item.to)
   }
 }

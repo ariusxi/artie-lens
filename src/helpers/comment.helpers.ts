@@ -59,7 +59,8 @@ export const buildCommentBody = (summary: CommentSummary): string => {
   if (summary.regressions.length) {
     lines.push('', `### Regressions vs baseline (${summary.regressions.length})`)
     for (const item of summary.regressions) {
-      lines.push(`- **${item.to}** ${item.metric.toUpperCase()} \`${item.value}\`: ${item.from} ${item.fromTotal} → ${item.to} ${item.toTotal}`)
+      const location = item.file ? ` (${item.file})` : ''
+      lines.push(`- **${item.to}** ${item.metric.toUpperCase()} \`${item.value}\`${location}: ${item.from} ${item.fromTotal} → ${item.to} ${item.toTotal}`)
     }
   }
 

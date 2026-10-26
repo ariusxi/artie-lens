@@ -5,7 +5,7 @@ import { MetricReport, MetricResult } from '../src/types/config.interface'
 
 const summary = { total: 0, max: 0, min: 0, average: '0', deviation: '0' }
 
-const cls = (value: string, total: number, label: string): MetricResult => ({ value, total, label })
+const cls = (value: string, total: number, label: string, file?: string): MetricResult => ({ value, total, label, file })
 
 const report = (metric: string, classes: MetricResult[]): MetricReport => ({ metric, summary, classes })
 
@@ -49,6 +49,21 @@ describe('computeRegressions', () => {
 
     expect(regressions).toHaveLength(1)
     expect(regressions[0]).toMatchObject({ metric: 'cbo', value: 'A', to: 'WARNING' })
+  })
+
+  it('distinguishes classes with the same name in different files', () => {
+    const baseline = [report('wmc', [
+      cls('User', 2, 'OK', 'domain/User.ts'),
+      cls('User', 12, 'WARNING', 'dto/User.ts'),
+    ])]
+    const current = [report('wmc', [
+      cls('User', 12, 'WARNING', 'domain/User.ts'),
+      cls('User', 12, 'WARNING', 'dto/User.ts'),
+    ])]
+
+    expect(computeRegressions(baseline, current)).toEqual([
+      expect.objectContaining({ value: 'User', file: 'domain/User.ts', from: 'OK', to: 'WARNING' }),
+    ])
   })
 
   it('returns nothing when everything is stable or improved', () => {

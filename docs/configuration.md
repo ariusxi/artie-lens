@@ -38,6 +38,10 @@
 | `options.ignoreReExports` | When `true`, re-export edges (`export * from`) are dropped from the module graph. Barrel files (`index.ts`) create hub cycles, so this separates them from real import cycles. Default `false`. |
 | `rules` | Architecture rules. See [rules.md](./rules.md). |
 
+The configuration is validated before analysis. Unknown metrics, malformed rules, invalid display
+levels, negative thresholds, and a `warning` threshold greater than `critical` are rejected with a
+non-zero exit code instead of being ignored.
+
 ## How labels are assigned
 
 A class or module is labelled by comparing its value against the thresholds:

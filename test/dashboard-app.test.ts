@@ -40,7 +40,7 @@ const config = {
 }
 
 const boot = (overrides: Partial<DashboardData> = {}): JSDOM => {
-  const html = buildDashboard({ report, violations, hotspots, cycles, deadCode, risk, hasCoverage: true, config, generatedAt: '2026-01-01T00:00:00Z', live: false, ...overrides })
+  const html = buildDashboard({ report, violations, hotspots, cycles, deadCode, risk, hasCoverage: true, config, generatedAt: '2026-01-01T00:00:00Z', live: false, ...overrides }, 'test-token')
   return new JSDOM(html, { runScripts: 'dangerously', url: 'https://artie.test/' })
 }
 
@@ -220,6 +220,7 @@ describe('dashboard client app', () => {
     expect(doc.querySelector('.sk')).toBeTruthy() // skeleton is shown while analyzing
     expect(posted.url).toBe('/config')
     expect(posted.init.method).toBe('POST')
+    expect(posted.init.headers['X-Artie-Token']).toBe('test-token')
     const sent = JSON.parse(posted.init.body)
     expect(sent.options.metrics.wmc.warning).toBe(3) // the edited value was collected
   })

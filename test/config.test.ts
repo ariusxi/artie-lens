@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { getEnableMetrics, getMetricIndexes, parseRunOptions } from '../src/helpers/config.helpers'
+import { assertConfigShape, getEnableMetrics, getMetricIndexes, parseRunOptions } from '../src/helpers/config.helpers'
 import { getMetricLabel, severityRank } from '../src/helpers/metric.helpers'
 import { ArtieConfig, MetricResult } from '../src/types/config.interface'
 
@@ -82,9 +82,52 @@ describe('parseRunOptions', () => {
     expect(parseRunOptions(['--suggest'])).toEqual({ suggest: true })
   })
 
-  it('ignores unknown flags and empty input', () => {
-    expect(parseRunOptions(['--foo'])).toEqual({})
+  it('rejects unknown and invalid flags', () => {
+    expect(() => parseRunOptions(['--foo'])).toThrow('Unknown option')
+    expect(() => parseRunOptions(['--fail-on=critcal'])).toThrow('--fail-on')
+    expect(() => parseRunOptions(['--port=70000'])).toThrow('--port')
     expect(parseRunOptions([])).toEqual({})
+  })
+})
+
+describe('assertConfigShape', () => {
+  const valid = () => ({
+    options: {
+      defaultThresholds: { warning: 10, critical: 20, levels: ['WARNING', 'CRITICAL'] },
+      metrics: { wmc: { enabled: true } },
+    },
+    includes: ['**/*.ts'],
+    excludes: [],
+  })
+
+  it('accepts a complete configuration', () => {
+    expect(assertConfigShape(valid())).toEqual(valid())
+  })
+
+  it('rejects unknown metrics and invalid thresholds', () => {
+    const unknown = valid() as any
+    unknown.options.metrics.nope = { enabled: true }
+    expect(() => assertConfigShape(unknown)).toThrow('Unknown metric')
+
+    const reversed = valid()
+    reversed.options.metrics.wmc = { enabled: true, warning: 30, critical: 20 } as any
+    expect(() => assertConfigShape(reversed)).toThrow('warning <= critical')
+  })
+
+  it('rejects malformed lists and missing inherited values', () => {
+    const badIncludes = valid() as any
+    badIncludes.includes = '**/*.ts'
+    expect(() => assertConfigShape(badIncludes)).toThrow('array of strings')
+
+    const missing = valid() as any
+    delete missing.options.defaultThresholds.warning
+    expect(() => assertConfigShape(missing)).toThrow('needs warning and critical')
+  })
+
+  it('rejects malformed architecture rules', () => {
+    const config = valid() as any
+    config.rules = [{ from: 'src/**', cannotImport: 'infra/**', canOnlyImport: 'domain/**' }]
+    expect(() => assertConfigShape(config)).toThrow('exactly one')
   })
 })
 

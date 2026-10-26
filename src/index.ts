@@ -50,13 +50,15 @@ const commands: Record<string, Command> = {
 
 const main = async (args: string[]): Promise<void> => {
   const [command, ...rest] = args.slice(2)
-  const directory = rest.find((arg) => !arg.startsWith('--'))
-  const options = parseRunOptions(rest.filter((arg) => arg.startsWith('--')))
-
-  const handler = commands[command]
-  if (!handler) return console.log('⚠️  Invalid command. Run `artie help` to see the available commands.')
 
   try {
+    const directories = rest.filter((arg) => !arg.startsWith('--'))
+    if (directories.length > 1) throw new Error('Only one analysis directory may be provided.')
+    const directory = directories[0]
+    const options = parseRunOptions(rest.filter((arg) => arg.startsWith('--')))
+    const handler = commands[command]
+    if (!handler) throw new Error('Invalid command. Run `artie help` to see the available commands.')
+
     await handler(directory, options)
   } catch (error) {
     console.error(`⚠️  ${error instanceof Error ? error.message : error}`)

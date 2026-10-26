@@ -1,5 +1,6 @@
 import { MetricReport, MetricResult } from '../types/config.interface'
 import { severityRank } from './metric.helpers'
+import { metricResultKey } from './identity.helpers'
 
 export type ChangeKind = 'worse' | 'new' | 'better' | 'gone'
 
@@ -34,7 +35,7 @@ const countSide = (report: MetricReport[]): { criticals: number; warnings: numbe
 }
 
 const byValue = (classes: MetricResult[]): Map<string, MetricResult> =>
-  new Map(classes.map((item) => [item.value, item]))
+  new Map(classes.map((item) => [metricResultKey(item), item]))
 
 // Decides how a single class moved between the two runs. Returns null when nothing worth showing
 // changed (OK stayed OK, or an identical finding).
@@ -64,15 +65,15 @@ export const compareReports = (base: MetricReport[], head: MetricReport[], ref: 
     const baseClasses = baseByMetric.get(metric) ?? new Map()
     const headClasses = headByMetric.get(metric) ?? new Map()
 
-    for (const value of new Set([...baseClasses.keys(), ...headClasses.keys()])) {
-      const from = baseClasses.get(value)
-      const to = headClasses.get(value)
+    for (const key of new Set([...baseClasses.keys(), ...headClasses.keys()])) {
+      const from = baseClasses.get(key)
+      const to = headClasses.get(key)
       const change = classifyChange(from, to)
       if (!change) continue
 
       deltas.push({
         metric,
-        value,
+        value: (to ?? from)!.value,
         file: (to ?? from)!.file,
         fromLabel: from ? from.label : null,
         toLabel: to ? to.label : null,

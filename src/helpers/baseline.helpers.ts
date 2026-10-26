@@ -3,6 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { MetricReport, Regression } from '../types/config.interface'
 
 import { severityRank } from './metric.helpers'
+import { metricResultKey } from './identity.helpers'
 
 export const DEFAULT_BASELINE = '.artie-baseline.json'
 
@@ -21,14 +22,14 @@ export const computeRegressions = (baseline: MetricReport[], current: MetricRepo
   const regressions: Regression[] = []
 
   const baselineIndex = new Map(
-    baseline.map((report) => [report.metric, new Map(report.classes.map((item) => [item.value, item]))]),
+    baseline.map((report) => [report.metric, new Map(report.classes.map((item) => [metricResultKey(item), item]))]),
   )
 
   for (const report of current) {
     const baselineClasses = baselineIndex.get(report.metric)
 
     for (const item of report.classes) {
-      const before = baselineClasses?.get(item.value)
+      const before = baselineClasses?.get(metricResultKey(item))
       // A class missing from the baseline is treated as previously healthy (OK)
       const beforeSeverity = before ? severityRank(before.label) : severityRank('OK')
       const afterSeverity = severityRank(item.label)
@@ -39,6 +40,7 @@ export const computeRegressions = (baseline: MetricReport[], current: MetricRepo
       regressions.push({
         metric: report.metric,
         value: item.value,
+        file: item.file,
         from: before ? before.label : 'NEW',
         to: item.label,
         fromTotal: before ? before.total : 0,

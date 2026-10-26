@@ -53,4 +53,5 @@ export const buildDashboardModel = (data: DashboardData): DashboardModel => {
   }
 }
 
-export const buildDashboard = (data: DashboardData): string => renderDashboard(buildDashboardModel(data))
+export const buildDashboard = (data: DashboardData, accessToken = ''): string =>
+  renderDashboard(buildDashboardModel(data), accessToken)

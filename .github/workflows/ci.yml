@@ -7,14 +7,54 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: Build
+        run: yarn build
+
+      - name: Test with coverage
+        run: yarn test:coverage
+
+      - name: Verify package contents
+        run: yarn pack:check
+
+      - name: Audit production dependencies
+        run: yarn audit --groups dependencies
+
+  compatibility:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            node: 20
+          - os: ubuntu-latest
+            node: 22
+          - os: ubuntu-latest
+            node: 24
+          - os: windows-latest
+            node: 20
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ matrix.node }}
           cache: yarn
 
       - name: Install dependencies
@@ -27,7 +67,7 @@ jobs:
         run: yarn test
 
   release:
-    needs: test
+    needs: [quality, compatibility]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -36,14 +76,14 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 22
+          node-version: 24
           cache: yarn
 
       - name: Install dependencies
@@ -53,7 +93,7 @@ jobs:
         run: yarn build
 
       - name: Release
-        run: npx semantic-release
+        run: npx --yes --package=semantic-release@25.0.9 --package=@semantic-release/changelog@7.0.0 --package=@semantic-release/git@11.0.1 semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

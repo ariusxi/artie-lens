@@ -31,4 +31,20 @@ describe('compareReports', () => {
   it('orders worse and new findings before improvements', () => {
     expect(comparison.deltas.map((delta) => delta.change)).toEqual(['worse', 'new', 'better', 'gone'])
   })
+
+  it('distinguishes classes with the same name in different files', () => {
+    const duplicateBase = wmc([
+      { ...cls('User', 12, 'WARNING'), file: 'domain/User.ts' },
+      { ...cls('User', 25, 'CRITICAL'), file: 'dto/User.ts' },
+    ])
+    const duplicateHead = wmc([
+      { ...cls('User', 25, 'CRITICAL'), file: 'domain/User.ts' },
+      { ...cls('User', 2, 'OK'), file: 'dto/User.ts' },
+    ])
+
+    expect(compareReports(duplicateBase, duplicateHead, 'main').deltas).toEqual([
+      expect.objectContaining({ value: 'User', file: 'domain/User.ts', change: 'worse' }),
+      expect.objectContaining({ value: 'User', file: 'dto/User.ts', change: 'better' }),
+    ])
+  })
 })
